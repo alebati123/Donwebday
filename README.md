@@ -4,8 +4,8 @@
 > **Hackatón DonWeb Day Rosario 2026** — *"Del problema al servidor"*  
 > **Comercio:** La Cantina de Don Brasa (Av. Pellegrini 1540, Rosario)  
 > **Repositorio Oficial:** [https://github.com/alebati123/Donwebday.git](https://github.com/alebati123/Donwebday.git)  
-> **Despliegue en Vivo (DonWeb Cloud Server):** [http://201.32.132.185/](http://201.32.132.185/)  
-> **Panel de Cocina & Administración:** [http://201.32.132.185/admin.html](http://201.32.132.185/admin.html)
+> **URL Pública Oficial:** [http://dwday121615041.online/](http://dwday121615041.online/) *(IP directa: [http://201.32.132.185/](http://201.32.132.185/))*  
+> **Panel de Cocina & Administración:** [http://dwday121615041.online/admin.html](http://dwday121615041.online/admin.html) *(IP directa: [http://201.32.132.185/admin.html](http://201.32.132.185/admin.html))*
 
 ---
 
