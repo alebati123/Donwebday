@@ -1,0 +1,24 @@
+{
+  "name": "don-brasa-ia-pedidos",
+  "version": "1.0.0",
+  "description": "Plataforma Web con IA Integrada para Automatización de Atención, Pedidos y Reservas de Comercios Locales - Hackatón DonWeb Day Rosario 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "donwebday",
+    "hackaton",
+    "ia",
+    "openai",
+    "comercio-local",
+    "rosario"
+  ],
+  "author": "Alejandro - DonWeb Day Rosario 2026",
+  "license": "MIT"
+}
+
