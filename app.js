@@ -1,6 +1,6 @@
 // ============================================================================
 // LA CANTINA DE DON BRASA — PLATAFORMA INTEGRAL DE BODEGÓN CON IA
-// Carta Interactiva • Conserje IA • Audio/Texto WhatsApp • Mapa de Mesas • ABM Admin
+// Carta Interactiva • Mozo Virtual • Audio/Texto WhatsApp • Mesas Modulares • Admin
 // ============================================================================
 
 const BUSINESS_INFO = {
@@ -202,20 +202,21 @@ let deliveryType = 'delivery';
 let chatHistory = [];
 let suggestedCombosStore = {};
 let activeOrderId = 'DB-1041';
-let selectedTableId = 'T4';
+let selectedTableId = 'T3';
 let currentMobileSubview = 'catalog';
 
+// Mesas con capacidad base + capacidad flexible (cabecera o unión de mesas)
 let restaurantTables = [
-  { id: 'T1', number: 1, zone: 'Salón Histórico (Pellegrini)', capacity: 2, status: 'free', guest: '' },
-  { id: 'T2', number: 2, zone: 'Salón Histórico (Pellegrini)', capacity: 4, status: 'occupied', guest: 'Familia Benítez (21:00)' },
-  { id: 'T3', number: 3, zone: 'Salón Histórico (Pellegrini)', capacity: 4, status: 'free', guest: '' },
-  { id: 'T4', number: 4, zone: 'Salón Histórico (Pellegrini)', capacity: 6, status: 'free', guest: '' },
-  { id: 'T5', number: 5, zone: 'Patio de Parra & Guirnaldas', capacity: 4, status: 'free', guest: '' },
-  { id: 'T6', number: 6, zone: 'Patio de Parra & Guirnaldas', capacity: 4, status: 'occupied', guest: 'Camila & Amigos (22:00)' },
-  { id: 'T7', number: 7, zone: 'Patio de Parra & Guirnaldas', capacity: 6, status: 'free', guest: '' },
-  { id: 'T8', number: 8, zone: 'Patio de Parra & Guirnaldas', capacity: 8, status: 'free', guest: '' },
-  { id: 'T9', number: 9, zone: 'Barra de Vermut & Picadas', capacity: 2, status: 'free', guest: '' },
-  { id: 'T10', number: 10, zone: 'Barra de Vermut & Picadas', capacity: 2, status: 'free', guest: '' }
+  { id: 'T1', number: 1, zone: 'Salón Histórico (Pellegrini)', capacity: 2, maxFlex: 3, flexNote: '2 a 3 pers. (+cabecera)', status: 'free', guest: '' },
+  { id: 'T2', number: 2, zone: 'Salón Histórico (Pellegrini)', capacity: 4, maxFlex: 5, flexNote: '3 a 5 pers. (+cabecera)', status: 'occupied', guest: 'Familia Benítez (21:00)' },
+  { id: 'T3', number: 3, zone: 'Salón Histórico (Pellegrini)', capacity: 4, maxFlex: 5, flexNote: '3 a 5 pers. (+cabecera)', status: 'free', guest: '' },
+  { id: 'T4', number: 4, zone: 'Salón Histórico (Pellegrini)', capacity: 6, maxFlex: 7, flexNote: '5 a 7 pers. (+cabecera)', status: 'free', guest: '' },
+  { id: 'T5', number: 5, zone: 'Patio de Parra & Guirnaldas', capacity: 4, maxFlex: 5, flexNote: '3 a 5 pers. (+cabecera)', status: 'free', guest: '' },
+  { id: 'T6', number: 6, zone: 'Patio de Parra & Guirnaldas', capacity: 4, maxFlex: 5, flexNote: '3 a 5 pers. (+cabecera)', status: 'occupied', guest: 'Camila & Amigos (22:00)' },
+  { id: 'T7', number: 7, zone: 'Patio de Parra & Guirnaldas', capacity: 6, maxFlex: 7, flexNote: '5 a 7 pers. (+cabecera)', status: 'free', guest: '' },
+  { id: 'T8', number: 8, zone: 'Patio de Parra & Guirnaldas', capacity: 8, maxFlex: 12, flexNote: '7 a 12 pers. (Mesas unidas)', status: 'free', guest: '' },
+  { id: 'T9', number: 9, zone: 'Barra de Vermut & Picadas', capacity: 2, maxFlex: 2, flexNote: '1 a 2 pers. (Banquetas)', status: 'free', guest: '' },
+  { id: 'T10', number: 10, zone: 'Barra de Vermut & Picadas', capacity: 2, maxFlex: 3, flexNote: '2 a 3 pers. (+cabecera)', status: 'free', guest: '' }
 ];
 
 let orders = [
@@ -225,7 +226,7 @@ let orders = [
     address: '9 de Julio 1420 Piso 2 A',
     deliveryType: 'delivery',
     paymentMethod: 'Transferencia',
-    source: '📲 IA (WhatsApp Audio)',
+    source: '📲 Pedido Rápido (Audio)',
     status: 'new',
     time: '20:42 hs',
     total: 29100,
@@ -241,7 +242,7 @@ let orders = [
     address: 'Retiro en mostrador (Av. Pellegrini 1540)',
     deliveryType: 'takeaway',
     paymentMethod: 'Efectivo (-10%)',
-    source: '💬 IA (Combo Presupuesto)',
+    source: '💬 Recomendación Mozo',
     status: 'cooking',
     time: '20:31 hs',
     total: 36450,
@@ -257,7 +258,7 @@ let orders = [
     address: 'Bv. Oroño 620 PB',
     deliveryType: 'delivery',
     paymentMethod: 'Mercado Pago',
-    source: '💬 IA (Menú Sin TACC)',
+    source: '💬 Menú Sin TACC',
     status: 'ready',
     time: '20:18 hs',
     total: 29050,
@@ -276,8 +277,8 @@ let reservations = [
     name: 'Familia Benítez',
     people: 4,
     time: '21:00 hs',
-    area: 'Salón Histórico (Pellegrini)',
-    notes: '1 silla para bebé • Tomada por Don Vito IA'
+    area: 'Salón Histórico (Mesa #2)',
+    notes: '1 sillita alta para bebé • Confirmada por Don Vito'
   },
   {
     id: 'RES-202',
@@ -285,8 +286,8 @@ let reservations = [
     name: 'Camila & Amigos',
     people: 4,
     time: '22:00 hs',
-    area: 'Patio de Parra & Guirnaldas',
-    notes: 'Opciones Veggie y Sin TACC consultadas con IA'
+    area: 'Patio de Parra (Mesa #6)',
+    notes: 'Menú Veggie y Sin TACC consultado en el chat'
   }
 ];
 
@@ -300,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderOrderTracker();
   renderAdminDashboard();
   initWelcomeChat();
-  checkServerAiStatus();
   syncResponsiveLayout();
   window.addEventListener('resize', syncResponsiveLayout);
 });
@@ -440,7 +440,7 @@ function renderCatalog() {
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; padding: 32px; text-align: center; background: #fff; border-radius: 12px; border: 1px dashed #c2b59e;">
         <p style="font-weight:700; margin-bottom:6px;">No encontramos platos con esos filtros combinados.</p>
-        <p class="sub-copy">Preguntale a <strong>Don Vito (Conserje IA)</strong> para que te arme una sugerencia a medida.</p>
+        <p class="sub-copy">Preguntale a <strong>Don Vito</strong> en el chat para que te recomiende una alternativa.</p>
       </div>
     `;
     return;
@@ -450,7 +450,7 @@ function renderCatalog() {
     .map((item) => {
       const floatingTags = [];
       if (!item.inStock) {
-        floatingTags.push(`<span class="dish-tag soldout">AGOTADO EN COCINA</span>`);
+        floatingTags.push(`<span class="dish-tag soldout">AGOTADO HOY</span>`);
       } else {
         if (item.tags.includes('popular')) floatingTags.push(`<span class="dish-tag popular">🔥 Clásico</span>`);
         if (item.tags.includes('sintacc')) floatingTags.push(`<span class="dish-tag sintacc">🌾 Sin TACC</span>`);
@@ -481,7 +481,7 @@ function renderCatalog() {
                 ${!item.inStock ? 'disabled' : ''}
                 onclick="addToCart('${item.id}', 1, '')"
               >
-                ${item.inStock ? '+ Sumar' : 'Agotado'}
+                ${item.inStock ? '+ Agregar' : 'Agotado'}
               </button>
             </div>
           </div>
@@ -515,7 +515,7 @@ function openDishModal(dishId) {
     </div>
 
     <div class="form-group" style="margin-bottom:12px;">
-      <label>Aclaraciones para el Maestro Pizzero / Cocina</label>
+      <label>Notas para tu pedido</label>
       <input type="text" id="modal-dish-notes" placeholder="Ej: Sin aceitunas, poco ajo, mitad sin orégano..." />
     </div>
 
@@ -526,7 +526,7 @@ function openDishModal(dishId) {
         ${!dish.inStock ? 'disabled' : ''}
         onclick="confirmDishModalAdd('${dish.id}')"
       >
-        ${dish.inStock ? '🛒 Agregar a mi Comanda' : 'Plato Agotado Hoy'}
+        ${dish.inStock ? '🛒 Agregar al Carrito' : 'Plato Agotado Hoy'}
       </button>
     </div>
   `;
@@ -547,7 +547,7 @@ function confirmDishModalAdd(dishId) {
 }
 
 // ============================================================================
-// COMANDA TÉRMICA (CARRITO) Y UPSELLING GASTRONÓMICO
+// CARRITO DE PEDIDO Y SUGERENCIAS
 // ============================================================================
 function addToCart(productId, qty = 1, notes = '') {
   const product = catalog.find((p) => p.id === productId);
@@ -624,8 +624,8 @@ function renderCart() {
   if (cart.length === 0) {
     listEl.innerHTML = `
       <div style="text-align:center; padding: 20px 10px; color: var(--ink-muted); font-size:0.82rem;">
-        Todavía no sumaste platos a la comanda.<br/>
-        Elegí de la carta o pedile a <strong>Don Vito IA</strong> que te arme el pedido.
+        Tu carrito está vacío.<br/>
+        Elegí platos de la carta o contale a <strong>Don Vito</strong> qué tenés ganas de comer hoy.
       </div>
     `;
     upsellBox.classList.add('hidden');
@@ -658,14 +658,14 @@ function renderCart() {
     if (hasPizza && !hasFaina && fainaProd?.inStock) {
       upsellBox.classList.remove('hidden');
       upsellBox.innerHTML = `
-        <div>✨ <strong>Sugerencia del Horno:</strong> ¿Marchamos una porción de <em>${fainaProd.name}</em> por $${fainaProd.price.toLocaleString('es-AR')}?</div>
-        <button class="btn-add-dish" onclick="addToCart('b3', 1, 'A caballo')">+ Sumar</button>
+        <div>✨ <strong>Para acompañar tu pizza:</strong> ¿Sumamos una porción de <em>${fainaProd.name}</em> por $${fainaProd.price.toLocaleString('es-AR')}?</div>
+        <button class="btn-add-dish" onclick="addToCart('b3', 1, 'A caballo')">+ Agregar</button>
       `;
     } else if (!hasDrink && vermutProd?.inStock) {
       upsellBox.classList.remove('hidden');
       upsellBox.innerHTML = `
-        <div>✨ <strong>Maridaje Cantina:</strong> ¿Agregamos un <em>${vermutProd.name}</em> bien frío por $${vermutProd.price.toLocaleString('es-AR')}?</div>
-        <button class="btn-add-dish" onclick="addToCart('d3', 1, '')">+ Sumar</button>
+        <div>✨ <strong>Para tomar:</strong> ¿Agregamos un <em>${vermutProd.name}</em> bien frío por $${vermutProd.price.toLocaleString('es-AR')}?</div>
+        <button class="btn-add-dish" onclick="addToCart('d3', 1, '')">+ Agregar</button>
       `;
     } else {
       upsellBox.classList.add('hidden');
@@ -674,30 +674,109 @@ function renderCart() {
 
   breakdownEl.innerHTML = `
     <div class="total-line">
-      <span>SUBTOTAL (${totalItems} ítems)</span>
+      <span>SUBTOTAL (${totalItems} productos)</span>
       <span>$${subtotal.toLocaleString('es-AR')}</span>
     </div>
     ${
       deliveryType === 'takeaway'
         ? `<div class="total-line" style="color: var(--green-ok);">
-            <span>BONIF. RETIRO MOSTRADOR (10%)</span>
+            <span>DESCUENTO RETIRO EN LOCAL (10%)</span>
             <span>-$${discount.toLocaleString('es-AR')}</span>
           </div>`
         : `<div class="total-line">
-            <span>ENVÍO CADETERÍA ${subtotal >= BUSINESS_INFO.freeDeliveryMin ? '(BONIFICADO)' : ''}</span>
+            <span>ENVÍO A DOMICILIO ${subtotal >= BUSINESS_INFO.freeDeliveryMin ? '(GRATIS)' : ''}</span>
             <span>${shipping === 0 && subtotal > 0 ? '$0' : '$' + shipping.toLocaleString('es-AR')}</span>
           </div>`
     }
     <div class="total-line final">
-      <span>TOTAL COMANDA</span>
+      <span>TOTAL DEL PEDIDO</span>
       <span>$${finalTotal.toLocaleString('es-AR')}</span>
     </div>
   `;
 }
 
 // ============================================================================
-// PLANO INTERACTIVO DE MESAS Y RESERVAS DEL SALÓN
+// PLANO INTERACTIVO DE MESAS MODULARES (SOLUCIÓN PARA 3, 5, 7 Y GRUPOS GRANDES)
 // ============================================================================
+function findBestFreeTableForPeople(peopleCount) {
+  const count = Number(peopleCount) || 2;
+  const freeTables = restaurantTables.filter((t) => t.status === 'free');
+  if (freeTables.length === 0) return null;
+
+  // 1. Buscar mesa donde entren cómodos en capacidad estándar (ej: si son 3, priorizar mesa de 4 antes que de 2)
+  const exactOrComfortable = freeTables
+    .filter((t) => t.capacity >= count)
+    .sort((a, b) => a.capacity - b.capacity);
+
+  if (exactOrComfortable.length > 0) {
+    return exactOrComfortable[0];
+  }
+
+  // 2. Si no hay de capacidad base mayor, buscar mesa donde entren con silla en cabecera o unión (maxFlex >= count)
+  const flexMatch = freeTables
+    .filter((t) => t.maxFlex >= count)
+    .sort((a, b) => a.maxFlex - b.maxFlex);
+
+  if (flexMatch.length > 0) {
+    return flexMatch[0];
+  }
+
+  // 3. Fallback a la mesa libre más grande disponible
+  return freeTables.sort((a, b) => b.maxFlex - a.maxFlex)[0];
+}
+
+function getSeatingExplanation(peopleCount, tableObj) {
+  const count = Number(peopleCount) || 2;
+  if (!tableObj) return 'Armado estándar cómodo';
+
+  if (count === 3) {
+    return tableObj.capacity >= 4
+      ? `Mesa de ${tableObj.capacity} adaptada cómoda para 3 personas`
+      : `Mesa con 3ra silla agregada en cabecera`;
+  }
+  if (count === 5) {
+    return tableObj.capacity >= 6
+      ? `Mesa amplia de ${tableObj.capacity} adaptada para 5 personas`
+      : `Mesa de 4 + 1 silla cómoda en cabecera (5 pers.)`;
+  }
+  if (count === 7) {
+    return tableObj.capacity >= 8
+      ? `Mesa grande de ${tableObj.capacity} adaptada para 7 personas`
+      : `Mesa de 6 + 1 silla extra en cabecera (7 pers.)`;
+  }
+  if (count >= 9) {
+    return `Unión de mesas contiguas preparada para ${count} personas`;
+  }
+  return `Mesa para ${count} personas`;
+}
+
+function autoMatchTableForPeopleCount() {
+  const people = Number(document.getElementById('res-people')?.value) || 4;
+  const setupSelect = document.getElementById('res-seating-setup');
+
+  // Ajustar sugerencia de configuración según número impar o grupo grande
+  if (setupSelect) {
+    if (people === 3 || people === 5 || people === 7) {
+      setupSelect.value = 'Sumar silla extra en cabecera';
+    } else if (people >= 9) {
+      setupSelect.value = 'Unir mesas contiguas';
+    } else {
+      setupSelect.value = 'Armado estándar cómodo';
+    }
+  }
+
+  const bestTable = findBestFreeTableForPeople(people);
+  if (bestTable) {
+    selectedTableId = bestTable.id;
+    const explain = getSeatingExplanation(people, bestTable);
+    const input = document.getElementById('res-table-selected');
+    if (input) {
+      input.value = `Mesa #${bestTable.number} (${bestTable.zone}) — ${explain}`;
+    }
+  }
+  renderTablesFloorplan();
+}
+
 function renderTablesFloorplan() {
   const container = document.getElementById('floor-zones-grid');
   const freeBadge = document.getElementById('tables-free-badge');
@@ -727,7 +806,8 @@ function renderTablesFloorplan() {
                   <div class="table-node ${cls}" onclick="selectFloorTable('${t.id}')">
                     <strong>MESA #${t.number}</strong>
                     <small>${t.capacity} cubiertos</small>
-                    <div style="font-size:0.68rem; margin-top:3px; font-weight:700;">
+                    <div style="font-size:0.65rem; opacity:0.88; margin-top:2px;">${t.flexNote}</div>
+                    <div style="font-size:0.68rem; margin-top:4px; font-weight:700;">
                       ${t.status === 'occupied' ? `🔒 ${t.guest}` : isSelected ? '✓ Seleccionada' : '🟢 Libre'}
                     </div>
                   </div>
@@ -762,12 +842,20 @@ function selectFloorTable(tableId) {
   const t = restaurantTables.find((x) => x.id === tableId);
   if (!t || t.status === 'occupied') return;
   selectedTableId = t.id;
+
+  const peopleSelect = document.getElementById('res-people');
+  const currentPeople = Number(peopleSelect?.value) || t.capacity;
+  // Si la mesa elegida es más chica que lo seleccionado, ajustamos o indicamos cabecera
+  const effectivePeople = currentPeople <= t.maxFlex ? currentPeople : t.capacity;
+  if (peopleSelect && currentPeople > t.maxFlex) {
+    peopleSelect.value = String(t.capacity);
+  }
+
+  const explain = getSeatingExplanation(effectivePeople, t);
   const input = document.getElementById('res-table-selected');
   if (input) {
-    input.value = `Mesa #${t.number} — ${t.zone} (Hasta ${t.capacity} pers.)`;
+    input.value = `Mesa #${t.number} (${t.zone}) — ${explain}`;
   }
-  const peopleSelect = document.getElementById('res-people');
-  if (peopleSelect) peopleSelect.value = String(Math.min(t.capacity, 8));
   renderTablesFloorplan();
 }
 
@@ -776,52 +864,67 @@ function handleManualReservationSubmit(e) {
   const name = document.getElementById('res-name').value.trim();
   const people = Number(document.getElementById('res-people').value) || 4;
   const time = document.getElementById('res-time').value;
-  const notes = document.getElementById('res-notes').value.trim() || 'Reserva desde Plano Interactivo Web';
+  const setup = document.getElementById('res-seating-setup')?.value || '';
+  const extraNotes = document.getElementById('res-notes').value.trim();
 
-  const tableObj =
-    restaurantTables.find((t) => t.id === selectedTableId && t.status === 'free') ||
-    restaurantTables.find((t) => t.status === 'free');
+  let tableObj = restaurantTables.find((t) => t.id === selectedTableId && t.status === 'free');
+  if (!tableObj || tableObj.maxFlex < people) {
+    tableObj = findBestFreeTableForPeople(people);
+  }
+
+  const explain = getSeatingExplanation(people, tableObj);
+  const combinedNotes = [explain, setup !== 'Armado estándar cómodo' ? setup : '', extraNotes]
+    .filter(Boolean)
+    .join(' • ');
 
   registerNewReservation({
     name,
     people,
     time,
     area: tableObj ? `${tableObj.zone} (Mesa #${tableObj.number})` : 'Salón Principal',
-    notes,
+    tableSetup: explain,
+    notes: combinedNotes,
     tableId: tableObj ? tableObj.id : null
   });
 
   document.getElementById('res-name').value = '';
   document.getElementById('res-notes').value = '';
-  alert(`¡Mesa confirmada para ${name} hoy a las ${time}! Ya quedó bloqueada en el plano del local.`);
+  alert(`¡Reserva confirmada para ${name} (${people} personas) hoy a las ${time}!\nArmado: ${explain}.`);
 }
 
 function registerNewReservation(resObj) {
+  const peopleCount = Number(resObj.people) || 4;
   let targetTable = null;
+
   if (resObj.tableId) {
-    targetTable = restaurantTables.find((t) => t.id === resObj.tableId && t.status === 'free');
+    const candidate = restaurantTables.find((t) => t.id === resObj.tableId && t.status === 'free');
+    if (candidate && candidate.maxFlex >= peopleCount) {
+      targetTable = candidate;
+    }
   }
+
+  // Si no se especificó mesa o la mesa era chica (ej: eran 3 y apuntaba a una de 2), buscar la mejor mesa cómoda
   if (!targetTable) {
-    targetTable =
-      restaurantTables.find((t) => t.status === 'free' && t.capacity >= (Number(resObj.people) || 2)) ||
-      restaurantTables.find((t) => t.status === 'free');
+    targetTable = findBestFreeTableForPeople(peopleCount);
   }
+
+  const explain = resObj.tableSetup || getSeatingExplanation(peopleCount, targetTable);
 
   if (targetTable) {
     targetTable.status = 'occupied';
-    targetTable.guest = `${resObj.name || 'Reserva IA'} (${resObj.time || '21:30'})`;
-    const nextFree = restaurantTables.find((t) => t.status === 'free');
+    targetTable.guest = `${resObj.name || 'Reserva'} (${peopleCount}p • ${resObj.time || '21:30'})`;
+    const nextFree = findBestFreeTableForPeople(4);
     if (nextFree) selectedTableId = nextFree.id;
   }
 
   const newRes = {
     id: `RES-${203 + reservations.length}`,
-    tableId: targetTable ? targetTable.id : 'T1',
-    name: resObj.name || 'Cliente Web IA',
-    people: Number(resObj.people) || 4,
+    tableId: targetTable ? targetTable.id : 'T3',
+    name: resObj.name || 'Cliente Web',
+    people: peopleCount,
     time: resObj.time || '21:30 hs',
     area: targetTable ? `${targetTable.zone} (Mesa #${targetTable.number})` : resObj.area || 'Patio de Parra',
-    notes: resObj.notes || 'Asignada automáticamente por Don Vito IA'
+    notes: [explain, resObj.notes].filter(Boolean).join(' • ')
   };
 
   reservations.unshift(newRes);
@@ -830,7 +933,7 @@ function registerNewReservation(resObj) {
 }
 
 // ============================================================================
-// CONSERJE IA ("DON VITO") + CONEXIÓN OPENAI
+// CONSERJE GASTRONÓMICO ("DON VITO")
 // ============================================================================
 function initWelcomeChat() {
   chatHistory = [];
@@ -838,11 +941,11 @@ function initWelcomeChat() {
   box.innerHTML = '';
   appendAssistantMessage({
     reply:
-      '¡Buenas noches! Soy **Don Vito**, el conserje digital de **La Cantina de Don Brasa**.\n\n' +
-      'Estoy conectado en vivo con los precios, platos y el plano del salón:\n' +
-      '• 🍕 Decime **cuántos son y qué presupuesto tienen** para armarte la mesa ideal.\n' +
-      '• 🛵 Dictame tu pedido con dirección y te lo cargo directo en la comanda.\n' +
-      '• 🪑 Pedime **mesa en el Patio o Salón** y te la reservo en el plano al instante.'
+      '¡Buenas noches! Soy **Don Vito**, el mozo virtual de **La Cantina de Don Brasa**.\n\n' +
+      'Contame cómo te puedo ayudar hoy:\n' +
+      '• 🍕 **¿No saben qué pedir?** Decime qué tienen ganas de comer hoy y cuántos son para recomendarte lo más rico del horno de barro.\n' +
+      '• 🛒 **Armo tu pedido:** Dictame los platos y tu dirección y te los cargo directo al carrito.\n' +
+      '• 🪑 **Reservo tu mesa:** Si son 2, 3, 5 o un grupo grande, preparamos la mesa con sillas extra o unimos mesas para que estén cómodos.'
   });
 }
 
@@ -864,13 +967,13 @@ function appendUserMessage(text) {
   box.scrollTop = box.scrollHeight;
 }
 
-function appendAssistantMessage(aiData, providerLabel = 'Don Vito • Conserje IA') {
+function appendAssistantMessage(aiData) {
   const box = document.getElementById('chat-messages');
   const div = document.createElement('div');
   div.className = 'msg-bubble assistant';
 
   let innerHtml = `
-    <div class="msg-header">${providerLabel}</div>
+    <div class="msg-header">Don Vito • Mozo de la Cantina</div>
     <div>${formatMarkdownText(aiData.reply)}</div>
   `;
 
@@ -886,7 +989,7 @@ function appendAssistantMessage(aiData, providerLabel = 'Don Vito • Conserje I
     if (addedNames.length > 0) {
       innerHtml += `
         <div class="auto-added-pill">
-          ✅ Marchado a tu comanda: ${addedNames.join(', ')}
+          ✅ Agregado a tu carrito: ${addedNames.join(', ')}
         </div>
       `;
     }
@@ -898,11 +1001,13 @@ function appendAssistantMessage(aiData, providerLabel = 'Don Vito • Conserje I
 
   if (aiData.reservation && aiData.reservation.detected) {
     registerNewReservation(aiData.reservation);
+    const pCount = Number(aiData.reservation.people) || 4;
+    const latestRes = reservations[0];
     innerHtml += `
       <div class="auto-added-pill">
-        🪑 Mesa reservada en el plano: ${aiData.reservation.people || 4} cubiertos hoy a las ${
-      aiData.reservation.time || '21:30'
-    } hs
+        🪑 Reserva confirmada: ${pCount} personas a las ${aiData.reservation.time || '21:30'} hs en ${
+      latestRes ? latestRes.area : 'Salón'
+    }
       </div>
     `;
   }
@@ -933,10 +1038,10 @@ function appendAssistantMessage(aiData, providerLabel = 'Don Vito • Conserje I
 
       innerHtml += `
         <div class="ai-combo-card">
-          <h4>🍽️ Sugerencia del Mozo (Total: $${comboTotal.toLocaleString('es-AR')})</h4>
+          <h4>🍽️ Recomendación de Don Vito (Total: $${comboTotal.toLocaleString('es-AR')})</h4>
           ${rowsHtml}
           <button class="btn-apply-combo" onclick="applySuggestedCombo('${comboId}')">
-            + Cargar toda esta selección a mi Comanda ($${comboTotal.toLocaleString('es-AR')})
+            🛒 Agregar todo al Carrito ($${comboTotal.toLocaleString('es-AR')})
           </button>
         </div>
       `;
@@ -951,7 +1056,7 @@ function appendAssistantMessage(aiData, providerLabel = 'Don Vito • Conserje I
 function applySuggestedCombo(comboId) {
   const items = suggestedCombosStore[comboId];
   if (!items) return;
-  items.forEach((it) => addToCart(it.id, it.quantity, 'Combo sugerido IA'));
+  items.forEach((it) => addToCart(it.id, it.quantity, 'Sugerencia de Don Vito'));
   if (window.innerWidth <= 1040) {
     setMobileMenuSubview('cart');
   } else {
@@ -1008,7 +1113,7 @@ async function sendChatMessage(userText, mode = 'chat') {
   const box = document.getElementById('chat-messages');
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'msg-bubble assistant';
-  loadingDiv.innerHTML = `<div class="msg-header">Don Vito • Conserje IA</div><div>🔥 <em>Consultando precios y stock en vivo...</em></div>`;
+  loadingDiv.innerHTML = `<div class="msg-header">Don Vito • Mozo de la Cantina</div><div>🔥 <em>Consultando la cocina en vivo...</em></div>`;
   if (mode === 'chat') {
     box.appendChild(loadingDiv);
     box.scrollTop = box.scrollHeight;
@@ -1018,7 +1123,6 @@ async function sendChatMessage(userText, mode = 'chat') {
   const selectedModel = sessionStorage.getItem('OPENAI_MODEL') || 'gpt-4o-mini';
 
   let aiResult = null;
-  let usedProvider = 'Don Vito • OpenAI GPT';
 
   try {
     const resp = await fetch('/api/chat', {
@@ -1037,7 +1141,6 @@ async function sendChatMessage(userText, mode = 'chat') {
       const json = await resp.json();
       if (json.ok && json.data) {
         aiResult = json.data;
-        usedProvider = `Don Vito • OpenAI (${json.model || selectedModel})`;
       }
     }
   } catch {
@@ -1049,7 +1152,6 @@ async function sendChatMessage(userText, mode = 'chat') {
       const directResp = await callOpenAiDirectlyFromBrowser(chatHistory, clientApiKey, selectedModel, mode);
       if (directResp) {
         aiResult = directResp;
-        usedProvider = `Don Vito • OpenAI (${selectedModel})`;
       }
     } catch {
       // Fallback al motor local
@@ -1058,7 +1160,6 @@ async function sendChatMessage(userText, mode = 'chat') {
 
   if (!aiResult) {
     aiResult = localSmartEngine(userText, mode);
-    usedProvider = 'Don Vito • Conserje IA';
   }
 
   if (mode === 'chat' && loadingDiv.parentNode) {
@@ -1068,7 +1169,7 @@ async function sendChatMessage(userText, mode = 'chat') {
   chatHistory.push({ role: 'assistant', content: aiResult.reply });
 
   if (mode === 'chat') {
-    appendAssistantMessage(aiResult, usedProvider);
+    appendAssistantMessage(aiResult);
   }
 
   return aiResult;
@@ -1082,7 +1183,7 @@ async function callOpenAiDirectlyFromBrowser(messages, apiKey, model, mode) {
     )
     .join('\n');
 
-  const sys = `Eres Don Vito, el mozo y conserje experto de La Cantina de Don Brasa (Rosario). Catálogo:\n${catalogSummary}\nResponde SIEMPRE en JSON con claves: reply (string), suggestedItems (array de {id, quantity}), autoCartAdd (array de {id, quantity}), extractedOrder ({customerName, address, paymentMethod, deliveryType, notes}), reservation ({detected, name, people, time, area, notes}). Modo: ${mode}.`;
+  const sys = `Eres Don Vito, el mozo experto de La Cantina de Don Brasa (Rosario). Catálogo:\n${catalogSummary}\nSi reservan para 3, 5 o 7 personas, explica que se les prepara una mesa amplia de 4, 6 u 8 o se agrega silla cómoda en cabecera. Responde SIEMPRE en JSON con claves: reply (string), suggestedItems (array de {id, quantity}), autoCartAdd (array de {id, quantity}), extractedOrder ({customerName, address, paymentMethod, deliveryType, notes}), reservation ({detected, name, people, time, area, tableSetup, notes}). Modo: ${mode}.`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -1092,7 +1193,7 @@ async function callOpenAiDirectlyFromBrowser(messages, apiKey, model, mode) {
     },
     body: JSON.stringify({
       model: model || 'gpt-4o-mini',
-      temperature: 0.3,
+      temperature: 0.35,
       response_format: { type: 'json_object' },
       messages: [{ role: 'system', content: sys }, ...messages.slice(-8)]
     })
@@ -1103,7 +1204,7 @@ async function callOpenAiDirectlyFromBrowser(messages, apiKey, model, mode) {
 }
 
 // ============================================================================
-// MOTOR NLU LOCAL RESILIENTE (USA PRECIOS Y PLATOS DINÁMICOS DEL ADMIN)
+// MOTOR INTELIGENTE DE RESPALDO (ENFOCADO EN GUSTOS Y MESAS FLEXIBLES)
 // ============================================================================
 function localSmartEngine(rawText) {
   const text = rawText.toLowerCase();
@@ -1133,81 +1234,83 @@ function localSmartEngine(rawText) {
   else if (text.includes('efectivo')) result.extractedOrder.paymentMethod = 'Efectivo';
   else if (text.includes('mercado pago') || text.includes('mercadopago')) result.extractedOrder.paymentMethod = 'Mercado Pago';
 
-  // Reserva de mesa
-  if (text.includes('reserv') || (text.includes('mesa') && (text.includes('personas') || text.includes('patio') || text.includes('21') || text.includes('22')))) {
-    const peopleMatch = text.match(/(\d+)\s*(?:personas|amigos|cubiertos)/);
+  // Reserva de mesa inteligente (maneja 3, 5, 7 y grupos grandes con mesas de 4, 6, 8 o unión)
+  if (text.includes('reserv') || (text.includes('mesa') && (text.includes('personas') || text.includes('patio') || text.includes('21') || text.includes('22') || text.includes('somos')))) {
+    const peopleMatch = text.match(/(\d+)\s*(?:personas|amigos|cubiertos|comensales)/);
     const timeMatch = text.match(/(\d{1,2}(?::\d{2})?)\s*(?:hs|horas)?/);
     const area = text.includes('patio') ? 'Patio de Parra & Guirnaldas' : 'Salón Histórico (Pellegrini)';
     const rName = result.extractedOrder.customerName || 'Cliente Cantina';
-    const people = peopleMatch ? Number(peopleMatch[1]) : 4;
+    const people = peopleMatch ? Number(peopleMatch[1]) : 3;
     const time = timeMatch ? (timeMatch[1].includes(':') ? timeMatch[1] : `${timeMatch[1]}:00`) : '21:30';
+
+    const matchedTable = findBestFreeTableForPeople(people);
+    const setupText = getSeatingExplanation(people, matchedTable);
 
     result.reservation = {
       detected: true,
       name: rName,
       people,
       time,
-      area,
-      notes: 'Confirmada por Don Vito IA en plano de salón'
+      area: matchedTable ? `${matchedTable.zone} (Mesa #${matchedTable.number})` : area,
+      tableSetup: setupText,
+      notes: 'Confirmada por Don Vito en el plano'
     };
+
     result.reply =
-      `¡Hecho, **${rName}**! 🪑 Ya te asigné y bloqueé una mesa libre en el plano para hoy:\n\n` +
-      `• **Comensales:** ${people} cubiertos\n` +
-      `• **Turno:** ${time} hs\n` +
-      `• **Sector:** ${area}\n\n` +
-      `Podés ver tu mesa marcada como ocupada ahora mismo en la pestaña **🪑 Salón & Mesas**.`;
+      `¡Bárbaro, **${rName}**! 🪑 Ya dejé lista tu reserva para hoy:\n\n` +
+      `• **Comensales:** ${people} personas\n` +
+      `• **Armado de mesa:** ${setupText} (en ${matchedTable ? `Mesa #${matchedTable.number} de ${matchedTable.zone}` : area}) para que estén bien cómodos.\n` +
+      `• **Horario:** ${time} hs\n\n` +
+      `Podés ver tu mesa asignada ahora mismo en la pestaña **🪑 Salón & Mesas**.`;
     return result;
   }
 
-  // Armado de combo por presupuesto / grupo
+  // Recomendación según ganas de comer / grupo de amigos
   if (
-    text.includes('presupuesto') ||
-    text.includes('gastar') ||
-    text.includes('combo') ||
-    text.includes('arm') ||
+    text.includes('ganas') ||
+    text.includes('recomend') ||
+    text.includes('suger') ||
+    text.includes('compartir') ||
     (text.includes('somos') && (text.includes('amigos') || text.includes('personas')))
   ) {
-    const budgetMatch = rawText.replace(/\./g, '').match(/\$?\s*(\d{4,6})/);
-    const budget = budgetMatch ? Number(budgetMatch[1]) : 35000;
     const hasVeggie = text.includes('veggie') || text.includes('vegetarian');
     const hasCeliac = text.includes('celiac') || text.includes('celíac') || text.includes('sin tacc');
+    const wantsMilanesa = text.includes('milanesa') || text.includes('bodeg');
 
     const combo = [];
-    let runningTotal = 0;
-
     const tryAdd = (id, qty) => {
       const prod = catalog.find((p) => p.id === id && p.inStock);
-      if (prod && runningTotal + prod.price * qty <= budget) {
+      if (prod) {
         combo.push({ id: prod.id, quantity: qty, name: prod.name, price: prod.price });
-        runningTotal += prod.price * qty;
       }
     };
 
     if (hasCeliac) tryAdd('p5', 1);
-    if (hasVeggie) {
+    if (wantsMilanesa) {
+      tryAdd('b1', 1);
+      tryAdd('e1', 3);
+    } else if (hasVeggie) {
       tryAdd('p2', 1) || tryAdd('p1', 1);
-      tryAdd('e3', 2);
-      tryAdd('e4', 2);
+      tryAdd('e3', 3);
+      tryAdd('e4', 3);
     } else {
-      tryAdd('p1', 1);
+      tryAdd('p3', 1) || tryAdd('p1', 1);
       tryAdd('e1', 4);
-      tryAdd('e2', 2);
+      tryAdd('b3', 1);
     }
-    tryAdd('d2', 1) || tryAdd('d1', 1);
-    tryAdd('b3', 1);
+    tryAdd('d2', 1) || tryAdd('d3', 1);
 
     result.suggestedItems = combo.map((c) => ({ id: c.id, quantity: c.quantity }));
-    const listStr = combo.map((c) => `• **${c.quantity}x ${c.name}** ($${(c.price * c.quantity).toLocaleString('es-AR')})`).join('\n');
+    const listStr = combo.map((c) => `• **${c.quantity}x ${c.name}**`).join('\n');
 
     result.reply =
-      `Para cuidar tu presupuesto de **$${budget.toLocaleString('es-AR')}**, armé esta mesa bien abundante con los precios vigentes de hoy:\n\n` +
+      `¡Qué lindo plan! Para compartir y probar lo más rico que está saliendo ahora del horno de barro, te sugiero esta selección bien de bodegón:\n\n` +
       `${listStr}\n\n` +
-      `💰 **Total: $${runningTotal.toLocaleString('es-AR')}** (Te sobran $${Math.max(0, budget - runningTotal).toLocaleString('es-AR')}).\n` +
-      `Tocá el botón terracota acá abajo para marchar todo junto a tu comanda:`;
+      `Si te tienta, tocá el botón de acá abajo para sumarlo directo a tu **Carrito**:`;
     return result;
   }
 
-  // Detección de platos pedidos (incluyendo platos nuevos subidos por el Admin)
+  // Detección de platos pedidos directamente
   const wordNums = { una: 1, un: 1, uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, media: 6, docena: 12 };
   const matcherRules = [
     { id: 'p5', regex: /(\d+|una|un|dos|tres)?\s*(?:pizzas?\s*)?(?:muzza(?:rella)?\s+)?sin\s+tacc/i },
@@ -1228,7 +1331,6 @@ function localSmartEngine(rawText) {
     { id: 'd4', regex: /(\d+|una|un|dos)?\s*flan(?:es)?/i }
   ];
 
-  // Agregar detección dinámica para productos creados por el Admin
   catalog.forEach((item) => {
     if (!matcherRules.some((r) => r.id === item.id)) {
       const keywords = item.name
@@ -1272,15 +1374,15 @@ function localSmartEngine(rawText) {
           return `• **${it.quantity}x ${p.name}** ($${(p.price * it.quantity).toLocaleString('es-AR')})`;
         })
         .join('\n');
-      msgParts.push(`¡Oído cocina! Ya anoté en tu comanda:\n\n${summary}`);
+      msgParts.push(`¡Excelente elección! Ya sumé a tu carrito:\n\n${summary}`);
     }
 
     if (outOfStockRequested.length > 0) {
       const names = outOfStockRequested.map((p) => `**${p.name}**`).join(', ');
       const alt = catalog.find((p) => p.inStock && p.category === outOfStockRequested[0].category);
       msgParts.push(
-        `⚠️ **Aviso de la Cocina en Vivo:** Recién se nos terminó la última tanda de ${names}. ${
-          alt ? `Te recomiendo reemplazarla por **${alt.name}** ($${alt.price.toLocaleString('es-AR')}) que está saliendo ahora mismo.` : ''
+        `⚠️ **Aviso de la Cocina:** Recién se nos terminó la última tanda de ${names}. ${
+          alt ? `Te recomiendo probar **${alt.name}** ($${alt.price.toLocaleString('es-AR')}) que está saliendo recién horneada.` : ''
         }`
       );
       if (alt) result.suggestedItems.push({ id: alt.id, quantity: 1 });
@@ -1289,7 +1391,7 @@ function localSmartEngine(rawText) {
     if (result.extractedOrder.address) {
       msgParts.push(`📍 **Dirección anotada:** ${result.extractedOrder.address}`);
     }
-    msgParts.push(`Revisá el ticket en la pestaña **🧾 Comanda** para marcharlo al horno.`);
+    msgParts.push(`Podés revisar y confirmar tu pedido en la pestaña **🛒 Carrito**.`);
     result.reply = msgParts.join('\n\n');
     return result;
   }
@@ -1302,8 +1404,8 @@ function localSmartEngine(rawText) {
       ...(veggie[2] ? [{ id: veggie[2].id, quantity: 2 }] : [])
     ];
     result.reply =
-      `En **La Cantina de Don Brasa** tenemos sector aislado para celíacos y opciones vegetarianas al barro:\n\n` +
-      `🌾 **Opciones Sin TACC disponibles ahora:**\n` +
+      `En **La Cantina de Don Brasa** tenemos cocina aislada para celíacos y varias especialidades vegetarianas al horno de barro:\n\n` +
+      `🌾 **Opciones Sin TACC disponibles hoy:**\n` +
       sintacc.map((p) => `• **${p.name}** ($${p.price.toLocaleString('es-AR')})`).join('\n') +
       `\n\n🌿 **Opciones Vegetarianas:**\n` +
       veggie.slice(0, 5).map((p) => `• **${p.name}** ($${p.price.toLocaleString('es-AR')})`).join('\n');
@@ -1313,8 +1415,8 @@ function localSmartEngine(rawText) {
   const avail = catalog.filter((p) => p.inStock);
   result.suggestedItems = avail.slice(0, 3).map((p) => ({ id: p.id, quantity: 1 }));
   result.reply =
-    `¡Adelante! Podés pedirme que te arme un combo según tu presupuesto, dictarme tu pedido con dirección o reservar mesa en el patio.\n\n` +
-    `Te dejo acá abajo una selección con los precios actualizados de hoy por si querés marcharla con 1 clic:`;
+    `¡Contame qué tenés ganas de comer hoy! Puedo sugerirte pizzas al molde, empanadas cortadas a cuchillo, platos de bodegón o reservarte una mesa cómoda en el patio.\n\n` +
+    `Acá abajo te dejo los favoritos de esta noche por si querés sumarlos al **Carrito** con un clic:`;
   return result;
 }
 
@@ -1333,7 +1435,7 @@ function loadWhatsAppSample(num) {
 
 function simulateVoiceTranscription() {
   const voiceTranscript =
-    '🎙️ [Audio transcripto por IA]: "Hola chicos de Don Brasa, habla Ramiro! Mándenme a San Martín 1120 piso 4 B una fugazzeta rellena, cuatro empanadas de carne cortada a cuchillo y un vermut con soda. Les transfiero al alias ahora mismo, gracias!"';
+    '🎙️ [Audio transcripto]: "Hola chicos de Don Brasa, habla Ramiro! Mándenme a San Martín 1120 piso 4 B una fugazzeta rellena, cuatro empanadas de carne cortada a cuchillo y un vermut con soda. Les transfiero al alias ahora mismo, gracias!"';
   document.getElementById('wa-raw-input').value = voiceTranscript;
   processWhatsAppText();
 }
@@ -1345,52 +1447,52 @@ async function processWhatsAppText() {
 
   if (!raw) {
     resBox.classList.remove('hidden');
-    resBox.innerHTML = '⚠️ Seleccioná un mensaje de prueba, el audio de arriba o pegá un texto primero.';
+    resBox.innerHTML = '⚠️ Seleccioná un pedido de ejemplo, el audio de arriba o escribí tu pedido primero.';
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = '⏳ Interpretando audio/mensaje con IA...';
+  btn.textContent = '⏳ Armando tu carrito automáticamente...';
 
   cart = [];
   const aiData = await sendChatMessage(raw, 'whatsapp_parser');
 
   if (Array.isArray(aiData.autoCartAdd)) {
-    aiData.autoCartAdd.forEach((item) => addToCart(item.id, Number(item.quantity) || 1, 'Desde WhatsApp IA'));
+    aiData.autoCartAdd.forEach((item) => addToCart(item.id, Number(item.quantity) || 1, 'Pedido Rápido'));
   }
   if (aiData.extractedOrder) {
     applyExtractedCustomerData(aiData.extractedOrder);
   }
 
   btn.disabled = false;
-  btn.textContent = '⚡ Extraer Platos y Armar Comanda con IA';
+  btn.textContent = '⚡ Cargar Platos Automáticamente al Carrito';
 
   const { finalTotal, totalItems } = calculateCartTotals();
   resBox.classList.remove('hidden');
   resBox.innerHTML = `
     <div style="color:var(--green-ok); font-weight:800; margin-bottom:6px;">
-      ✅ ¡Mensaje convertido en Comanda Térmica sin errores!
+      ✅ ¡Tu pedido ya fue cargado en el Carrito!
     </div>
-    <div>• <strong>Platos detectados:</strong> ${totalItems} unidades</div>
+    <div>• <strong>Productos sumados:</strong> ${totalItems} unidades</div>
     <div>• <strong>Cliente:</strong> ${document.getElementById('cust-name').value || 'Ramiro'}</div>
     <div>• <strong>Entrega:</strong> ${
       deliveryType === 'takeaway'
-        ? 'Retiro en mostrador (-10%)'
+        ? 'Retiro en local (-10%)'
         : document.getElementById('cust-address').value || 'Envío a domicilio'
     }</div>
     <div style="font-family:var(--font-mono); font-weight:700; margin-top:4px;">TOTAL: $${finalTotal.toLocaleString('es-AR')}</div>
     <button class="btn-terracotta btn-block" style="margin-top:10px;" onclick="openMobileCartOrFocus()">
-      🧾 Ver Ticket Listo para Marchar (${totalItems})
+      🛒 Ir a Mi Carrito para Confirmar (${totalItems})
     </button>
   `;
 }
 
 // ============================================================================
-// MARCHAR PEDIDO A COCINA Y SEGUIMIENTO EN VIVO (TRACKER)
+// CONFIRMAR PEDIDO Y SEGUIMIENTO EN VIVO (TRACKER)
 // ============================================================================
 function submitFinalOrder() {
   if (cart.length === 0) {
-    alert('Sumá al menos un plato a la comanda antes de marchar a cocina.');
+    alert('Agregá al menos un plato al carrito antes de confirmar tu pedido.');
     return;
   }
 
@@ -1424,7 +1526,7 @@ function submitFinalOrder() {
     address,
     deliveryType,
     paymentMethod: payment,
-    source: '🧾 Web + Conserje IA',
+    source: '🛒 Pedido Web',
     status: 'new',
     time: nowStr,
     total: finalTotal,
@@ -1452,7 +1554,7 @@ function renderOrderTracker() {
 
   const currentOrd = orders.find((o) => o.id === activeOrderId) || orders[0];
   if (!currentOrd) {
-    wrap.innerHTML = `<p>No hay comandas activas en este momento.</p>`;
+    wrap.innerHTML = `<p>No hay pedidos activos en este momento.</p>`;
     return;
   }
 
@@ -1464,25 +1566,25 @@ function renderOrderTracker() {
     <div class="tracker-card">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
         <div>
-          <span class="eyebrow-tag">SEGUIMIENTO DE COMANDA EN TIEMPO REAL</span>
-          <h2 style="font-family:var(--font-serif); color:var(--green-bodegon);">Comanda #${currentOrd.id} — ${currentOrd.customerName}</h2>
-          <p class="sub-copy">📍 ${currentOrd.address} • Ingresó a las ${currentOrd.time}</p>
+          <span class="eyebrow-tag">SEGUIMIENTO DE MI PEDIDO EN TIEMPO REAL</span>
+          <h2 style="font-family:var(--font-serif); color:var(--green-bodegon);">Pedido #${currentOrd.id} — ${currentOrd.customerName}</h2>
+          <p class="sub-copy">📍 ${currentOrd.address} • Confirmado a las ${currentOrd.time}</p>
         </div>
         <span class="order-source-badge" style="font-size:0.8rem; padding:6px 10px;">${currentOrd.source}</span>
       </div>
 
       <div class="tracker-steps">
         <div class="t-step ${step1Class}">
-          <strong style="display:block; font-size:0.95rem;">1. Recibida por IA</strong>
-          <small class="sub-copy">Comanda validada y cobrada sin demoras</small>
+          <strong style="display:block; font-size:0.95rem;">1. Pedido Confirmado</strong>
+          <small class="sub-copy">Recibido en cocina sin demoras</small>
         </div>
         <div class="t-step ${step2Class}">
           <strong style="display:block; font-size:0.95rem;">2. En Horno de Barro (430°C)</strong>
-          <small class="sub-copy">Maestro pizzero preparando tu pedido</small>
+          <small class="sub-copy">Maestro pizzero preparando tus platos</small>
         </div>
         <div class="t-step ${step3Class}">
-          <strong style="display:block; font-size:0.95rem;">3. En Camino / Lista</strong>
-          <small class="sub-copy">Despachada desde Av. Pellegrini 1540</small>
+          <strong style="display:block; font-size:0.95rem;">3. En Camino / Listo</strong>
+          <small class="sub-copy">Saliendo desde Av. Pellegrini 1540</small>
         </div>
       </div>
 
@@ -1497,16 +1599,16 @@ function renderOrderTracker() {
             )
             .join('')}
           <div style="display:flex; justify-content:space-between; padding-top:8px; font-weight:700; color:var(--terracotta);">
-            <span>TOTAL PAGADO (${currentOrd.paymentMethod})</span>
+            <span>TOTAL DEL PEDIDO (${currentOrd.paymentMethod})</span>
             <span>$${currentOrd.total.toLocaleString('es-AR')}</span>
           </div>
         </div>
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <span class="sub-copy" style="font-size:0.82rem;">💡 Podés cambiar el estado de esta comanda desde el <strong>👨‍🍳 Panel Admin & Cocina</strong> y ver cómo se actualiza en vivo.</span>
+        <span class="sub-copy" style="font-size:0.82rem;">💡 En el <strong>👨‍🍳 Panel Admin</strong> podés avanzar el estado de este pedido y ver cómo cambia en tiempo real.</span>
         <button class="btn-outline-dark" onclick="navigateApp('admin'); switchAdminSubtab('kanban');">
-          👨‍🍳 Ir a Comandera de Cocina →
+          👨‍🍳 Ver Pedidos en Cocina →
         </button>
       </div>
     </div>
@@ -1514,7 +1616,7 @@ function renderOrderTracker() {
 }
 
 // ============================================================================
-// PANEL ADMINISTRADOR: ABM DE PRODUCTOS, EDITOR DE PRECIOS, STOCK Y KANBAN
+// PANEL ADMINISTRADOR: ABM DE PRODUCTOS, EDITOR DE PRECIOS, STOCK Y COCINA
 // ============================================================================
 function switchAdminSubtab(tabName) {
   document.querySelectorAll('.adm-subtab').forEach((b) => b.classList.remove('active'));
@@ -1537,7 +1639,6 @@ function renderAdminDashboard() {
   if (kpiCat) kpiCat.textContent = catalog.length;
   document.getElementById('kpi-reservations-count').textContent = reservations.length;
 
-  // Renderizar Kanban de Comandas
   const cols = { new: [], cooking: [], ready: [] };
   orders.forEach((o) => {
     if (cols[o.status]) cols[o.status].push(o);
@@ -1550,7 +1651,7 @@ function renderAdminDashboard() {
   const renderOrderCard = (o) => {
     let nextLabel = '';
     if (o.status === 'new') nextLabel = '🔥 Meter al Horno de Barro →';
-    else if (o.status === 'cooking') nextLabel = '🛵 Despachar Cadete / Mostrador →';
+    else if (o.status === 'cooking') nextLabel = '🛵 Despachar Pedido →';
 
     return `
       <div class="order-card">
@@ -1586,7 +1687,6 @@ function renderAdminDashboard() {
   document.getElementById('kanban-cooking').innerHTML = cols.cooking.map(renderOrderCard).join('');
   document.getElementById('kanban-ready').innerHTML = cols.ready.map(renderOrderCard).join('');
 
-  // Renderizar Lista de Productos con Edición de Precios en Línea, Editar, Stock y Eliminar
   const stockEl = document.getElementById('admin-stock-list');
   stockEl.innerHTML = catalog
     .map(
@@ -1646,7 +1746,7 @@ function renderAdminDashboard() {
       (r) => `
       <div class="stock-row">
         <div>
-          <strong>🪑 ${r.time} — ${r.name} (${r.people} cubiertos)</strong>
+          <strong>🪑 ${r.time} — ${r.name} (${r.people} personas)</strong>
           <div style="font-size:0.75rem; color:var(--ink-muted);">${r.area} • ${r.notes}</div>
         </div>
         <span class="order-source-badge">Confirmada</span>
@@ -1848,7 +1948,7 @@ function simulateIncomingWhatsAppOrder() {
     address: addresses[idx],
     deliveryType: 'delivery',
     paymentMethod: 'Mercado Pago',
-    source: '📲 IA (Simulación En Vivo)',
+    source: '📲 Pedido Web (En Vivo)',
     status: 'new',
     time: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs',
     total: 27400,
@@ -1866,36 +1966,8 @@ function simulateIncomingWhatsAppOrder() {
 }
 
 // ============================================================================
-// CONFIGURACIÓN DE OPENAI API KEY
+// CONFIGURACIÓN DE OPENAI API KEY (SOLO DESDE ADMIN)
 // ============================================================================
-async function checkServerAiStatus() {
-  const dot = document.getElementById('ai-status-dot');
-  const txt = document.getElementById('ai-status-text');
-  const localKey = sessionStorage.getItem('OPENAI_API_KEY') || localStorage.getItem('OPENAI_API_KEY');
-
-  try {
-    const res = await fetch('/api/chat');
-    if (res.ok) {
-      const data = await res.json();
-      if (data.hasServerApiKey || localKey) {
-        dot.classList.remove('hybrid');
-        txt.textContent = `OpenAI (${data.model || 'gpt-4o-mini'})`;
-        return;
-      }
-    }
-  } catch {
-    // Modo local / estático
-  }
-
-  if (localKey) {
-    dot.classList.remove('hybrid');
-    txt.textContent = 'OpenAI Activo';
-  } else {
-    dot.classList.add('hybrid');
-    txt.textContent = 'Configurar Key IA';
-  }
-}
-
 function openApiKeyModal() {
   const current = sessionStorage.getItem('OPENAI_API_KEY') || '';
   document.getElementById('modal-apikey-input').value = current;
@@ -1931,9 +2003,8 @@ async function saveApiKeyConfig() {
     // Guardado en sesión local
   }
 
-  await checkServerAiStatus();
   msg.style.color = 'var(--green-ok)';
   msg.style.fontWeight = '700';
-  msg.textContent = '✅ Clave activada correctamente (protegida fuera de GitHub).';
+  msg.textContent = '✅ Configuración actualizada.';
   setTimeout(() => closeApiKeyModal(), 900);
 }

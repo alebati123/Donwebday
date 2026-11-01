@@ -1274,7 +1274,29 @@ img {
 
 /* SCREEN 2: INTERACTIVE RESTAURANT FLOORPLAN (TABLES) */
 .screen-heading {
-  margin-bottom: 22px;
+  margin-bottom: 16px;
+}
+
+.seating-flex-banner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.seating-flex-banner .flex-item {
+  background: var(--bg-paper);
+  border: 1.5px solid var(--border-strong);
+  border-left: 5px solid var(--mustard-gold);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.83rem;
+}
+
+.seating-flex-banner .flex-item strong {
+  display: block;
+  color: var(--green-bodegon);
+  margin-bottom: 2px;
 }
 
 .eyebrow-tag {

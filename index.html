@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <title>La Cantina de Don Brasa — Horno de Barro, Pedidos & Conserje IA | Rosario</title>
+  <title>La Cantina de Don Brasa — Horno de Barro, Pedidos & Reservas | Rosario</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
     </div>
   </div>
 
-  <!-- CABECERA DE APLICACIÓN -->
+  <!-- CABECERA DE APLICACIÓN (LIMPIA Y ENFOCADA EN EL CLIENTE) -->
   <header class="app-header">
     <div class="container header-inner">
       <div class="brand-lockup" onclick="navigateApp('menu')">
@@ -49,11 +49,11 @@
           <span class="nav-pill" id="tables-free-badge">8 libres</span>
         </button>
         <button class="nav-item" id="nav-tracker" onclick="navigateApp('tracker')">
-          <span>🧾 Mi Comanda</span>
+          <span>🛵 Mi Pedido</span>
           <span class="nav-pill highlight hidden" id="active-order-pill">EN HORNO</span>
         </button>
         <button class="nav-item nav-pos" id="nav-admin" onclick="navigateApp('admin')">
-          <span>👨‍🍳 Panel Admin & Cocina</span>
+          <span>👨‍🍳 Panel Admin</span>
           <span class="nav-pill pos-count" id="admin-orders-badge">3</span>
         </button>
         <button class="nav-item" id="nav-report" onclick="navigateApp('report')">
@@ -62,12 +62,8 @@
       </nav>
 
       <div class="header-controls">
-        <button class="btn-ai-key" id="ai-status-btn" onclick="openApiKeyModal()" title="Configurar conexión con OpenAI">
-          <span class="key-indicator" id="ai-status-dot"></span>
-          <span id="ai-status-text">Motor IA</span>
-        </button>
         <button class="btn-cart-header" onclick="openMobileCartOrFocus()">
-          <span class="cart-icon-label">🛒 Comanda</span>
+          <span class="cart-icon-label">🛒 Carrito</span>
           <strong id="header-cart-total">$0</strong>
           <span class="cart-badge-circle" id="cart-count-badge">0</span>
         </button>
@@ -81,18 +77,18 @@
       🍕 Ver Carta (<span id="msub-dishes-count">16</span>)
     </button>
     <button class="msub-btn" id="msub-chat" onclick="setMobileMenuSubview('chat')">
-      💬 Mozo IA
+      💬 Mozo Virtual
     </button>
     <button class="msub-btn" id="msub-whatsapp" onclick="setMobileMenuSubview('whatsapp')">
       📲 Pegar WhatsApp
     </button>
     <button class="msub-btn" id="msub-cart" onclick="setMobileMenuSubview('cart')">
-      🧾 Ticket (<span id="msub-cart-count">0</span>)
+      🛒 Carrito (<span id="msub-cart-count">0</span>)
     </button>
   </div>
 
   <!-- ======================================================================= -->
-  <!-- PANTALLA 1: CARTA INTERACTIVA + MOSTRADOR CONSERJE IA + COMANDA         -->
+  <!-- PANTALLA 1: CARTA INTERACTIVA + MOSTRADOR CONSERJE IA + CARRITO         -->
   <!-- ======================================================================= -->
   <main id="screen-menu" class="app-screen active">
     <div class="container app-layout">
@@ -100,12 +96,12 @@
       <div class="menu-main-col" id="menu-main-col">
         <!-- Banner Destacado Fotográfico Compacto -->
         <div class="featured-strip">
-          <div class="featured-card" onclick="triggerQuickPrompt('Somos 4 amigos, uno es vegetariano, queremos gastar menos de $36.000. ¿Qué nos armás?')">
+          <div class="featured-card" onclick="triggerQuickPrompt('Somos 4 amigos, hoy tenemos ganas de pizza al horno de barro y empanadas para picar (uno es vegetariano). ¿Qué nos recomendás pedir?')">
             <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="Pizza al horno de barro" loading="lazy" />
             <div class="featured-overlay">
-              <span class="featured-tag">✨ Armador con IA</span>
-              <h3>¿Son varios y tienen presupuesto fijo?</h3>
-              <p>Decile a Don Vito cuántos son y cuánto quieren gastar: te arma la mesa exacta al instante →</p>
+              <span class="featured-tag">✨ Recomendación del Mozo</span>
+              <h3>¿No saben qué pedir para compartir?</h3>
+              <p>Contale a Don Vito qué tienen ganas de comer hoy y cuántos son: te sugiere la combinación ideal →</p>
             </div>
           </div>
 
@@ -113,8 +109,8 @@
             <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80" alt="Milanesa de bodegón" loading="lazy" />
             <div class="featured-overlay">
               <span class="featured-tag">📲 Chau demoras de WhatsApp</span>
-              <h3>Transformador de Mensaje o Audio a Pedido</h3>
-              <p>Pegá el texto caótico de WhatsApp y cargamos toda la comanda en 2 segundos →</p>
+              <h3>Pegá tu mensaje o audio y armamos el carrito</h3>
+              <p>Escribí todo tu pedido de corrido como en WhatsApp y lo cargamos listo en 2 segundos →</p>
             </div>
           </div>
         </div>
@@ -156,22 +152,22 @@
         <div class="dishes-grid" id="catalog-grid"></div>
       </div>
 
-      <!-- COLUMNA LATERAL DERECHA: MOSTRADOR IA ("DON VITO") + COMANDA TÉRMICA -->
+      <!-- COLUMNA LATERAL DERECHA: MOSTRADOR IA ("DON VITO") + CARRITO -->
       <aside class="side-dock" id="side-dock">
         <div class="dock-card">
           <div class="dock-tabs">
             <button class="dock-tab active" id="rtab-chat" onclick="switchRightTab('chat')">
-              💬 Conserje IA
+              💬 Don Vito (Mozo)
             </button>
             <button class="dock-tab" id="rtab-whatsapp" onclick="switchRightTab('whatsapp')">
-              📲 Pegar WhatsApp
+              📲 Pedido Rápido
             </button>
             <button class="dock-tab" id="rtab-cart" onclick="switchRightTab('cart')">
-              🧾 Comanda (<span id="dock-cart-count">0</span>)
+              🛒 Carrito (<span id="dock-cart-count">0</span>)
             </button>
           </div>
 
-          <!-- PESTAÑA 1: CONSERJE GASTRONÓMICO IA ("DON VITO") -->
+          <!-- PESTAÑA 1: CONSERJE GASTRONÓMICO ("DON VITO") -->
           <div id="rpanel-chat" class="dock-panel active">
             <div class="concierge-banner">
               <img
@@ -180,27 +176,27 @@
                 class="concierge-avatar"
               />
               <div>
-                <strong>Don Vito • Mozo & Conserje IA</strong>
-                <p>Sincronizado en vivo con precios, stock y salón</p>
+                <strong>Don Vito • Mozo & Conserje de la Cantina</strong>
+                <p>Te recomiendo platos, armo tu carrito o reservo tu mesa al instante</p>
               </div>
             </div>
 
             <div class="chat-stream" id="chat-messages"></div>
 
             <div class="quick-prompts-bar">
-              <span class="qp-title">Consultas rápidas de salón y delivery:</span>
+              <span class="qp-title">¿De qué tienen ganas hoy? Tocá para consultar:</span>
               <div class="qp-list">
-                <button class="qp-btn" onclick="triggerQuickPrompt('Somos 3 amigos, tenemos $28.000 de presupuesto total, ¿qué nos armás para comer bien?')">
-                  💰 Presupuesto $28.000 (3 pers.)
+                <button class="qp-btn" onclick="triggerQuickPrompt('Hoy tenemos ganas de comer una buena pizza rellena y empanadas para compartir entre 3 personas, ¿qué nos sugerís?')">
+                  🍕 Noche de pizza y empanadas (3 pers.)
                 </button>
                 <button class="qp-btn" onclick="triggerQuickPrompt('Mandame 1 fugazzeta rellena, 4 empanadas de carne a cuchillo y 1 vermut con soda a Rioja 1850')">
-                  🛵 Cargar pedido directo
+                  🛵 Armar pedido directo a domicilio
                 </button>
-                <button class="qp-btn" onclick="triggerQuickPrompt('¿Qué platos Sin TACC aptos para celíacos o vegetarianos tienen disponibles hoy?')">
-                  🌾 Opciones Celíacos / Veggie
+                <button class="qp-btn" onclick="triggerQuickPrompt('¿Qué platos ricos tienen para alguien celíaco (Sin TACC) o vegetariano?')">
+                  🌾 Opciones Sin TACC / Veggie
                 </button>
-                <button class="qp-btn" onclick="triggerQuickPrompt('Reservame una mesa para 4 personas hoy a las 21:30 en el Patio de Parra a nombre de Alejandro')">
-                  🪑 Reservar mesa en el Patio
+                <button class="qp-btn" onclick="triggerQuickPrompt('Quiero reservar una mesa para 3 personas hoy a las 21:30 en el Patio de Parra a nombre de Alejandro')">
+                  🪑 Reservar mesa para 3 en el Patio
                 </button>
               </div>
             </div>
@@ -209,7 +205,7 @@
               <input
                 type="text"
                 id="chat-input"
-                placeholder="Pedí platos, preguntá por alérgenos o armá tu presupuesto..."
+                placeholder="Contame qué tenés ganas de comer hoy o pedí tu mesa..."
                 autocomplete="off"
               />
               <button type="submit" class="btn-composer-send" id="btn-send-chat">Enviar</button>
@@ -220,10 +216,10 @@
           <div id="rpanel-whatsapp" class="dock-panel">
             <div class="wa-tool-container">
               <div class="wa-explainer">
-                <span class="wa-badge">SOLUCIÓN AL CAOS DEL WHATSAPP</span>
-                <h4>Convertidor de Audio / Texto a Comanda</h4>
+                <span class="wa-badge">PEDIDO RÁPIDO SIN ESPERAS</span>
+                <h4>Convertidor de Audio o Mensaje a Carrito</h4>
                 <p>
-                  En hora pico entran decenas de mensajes desordenados. Probá cargar un mensaje real o simular un audio de WhatsApp: la IA detecta platos, cantidades, dirección y forma de pago sin intervención humana.
+                  Pegá tu pedido escrito como en WhatsApp o probá el simulador de audio: identificamos cada plato, cantidad, dirección y forma de pago y los sumamos directo a tu carrito.
                 </p>
               </div>
 
@@ -231,7 +227,7 @@
                 <div class="voice-top">
                   <span class="voice-mic">🎙️ Audio de WhatsApp recibido (0:18)</span>
                   <button type="button" class="btn-play-voice" onclick="simulateVoiceTranscription()">
-                    ▶ Transcribir y Cargar con IA
+                    ▶ Transcribir y Cargar al Carrito
                   </button>
                 </div>
                 <div class="voice-waveform">
@@ -240,16 +236,16 @@
               </div>
 
               <div class="wa-presets">
-                <span class="qp-title">O probá con estos mensajes reales de clientes:</span>
+                <span class="qp-title">O probá con estos pedidos de ejemplo:</span>
                 <div class="preset-btns">
                   <button type="button" class="preset-btn" onclick="loadWhatsAppSample(1)">
-                    📩 Mensaje 1: Familia en Bv. Oroño
+                    📩 Ejemplo 1: Pedido familiar con envío a Bv. Oroño
                   </button>
                   <button type="button" class="preset-btn" onclick="loadWhatsAppSample(2)">
-                    📩 Mensaje 2: Juntada con Milanesa XXL
+                    📩 Ejemplo 2: Juntada con Milanesa XXL y Pizza
                   </button>
                   <button type="button" class="preset-btn" onclick="loadWhatsAppSample(3)">
-                    📩 Mensaje 3: Retiro en mostrador Sin TACC
+                    📩 Ejemplo 3: Retiro por el local con menú Sin TACC
                   </button>
                 </div>
               </div>
@@ -257,44 +253,43 @@
               <textarea
                 id="wa-raw-input"
                 rows="4"
-                placeholder="Pegá acá el mensaje de WhatsApp del cliente..."
+                placeholder="Escribí o pegá acá tu pedido completo..."
               ></textarea>
 
               <button type="button" class="btn-terracotta btn-block" id="btn-parse-wa" onclick="processWhatsAppText()">
-                ⚡ Extraer Platos y Armar Comanda con IA
+                ⚡ Cargar Platos Automáticamente al Carrito
               </button>
 
               <div id="wa-parse-result" class="wa-result-card hidden"></div>
             </div>
           </div>
 
-          <!-- PESTAÑA 3: TICKET DE COMANDA / CARRITO -->
+          <!-- PESTAÑA 3: MI CARRITO / PEDIDO -->
           <div id="rpanel-cart" class="dock-panel">
             <div class="thermal-ticket-wrap">
               <div class="thermal-ticket">
                 <div class="ticket-brand-head">
-                  <strong>LA CANTINA DE DON BRASA</strong>
-                  <span>AV. PELLEGRINI 1540 • ROSARIO</span>
-                  <span class="mono-sm">COMANDA WEB AUTOMATIZADA</span>
+                  <strong>MI CARRITO DE PEDIDO</strong>
+                  <span>LA CANTINA DE DON BRASA • AV. PELLEGRINI 1540</span>
                 </div>
 
                 <div class="delivery-mode-switch">
                   <button type="button" class="mode-btn active" id="deliv-btn-delivery" onclick="setDeliveryType('delivery')">
-                    🛵 Delivery
+                    🛵 Envío a Domicilio
                   </button>
                   <button type="button" class="mode-btn" id="deliv-btn-takeaway" onclick="setDeliveryType('takeaway')">
-                    🥡 Retiro (-10%)
+                    🥡 Retiro en Local (-10%)
                   </button>
                 </div>
 
                 <div id="cart-items-list" class="ticket-items"></div>
 
-                <!-- Sugerencia de Maridaje / Upselling de la IA -->
+                <!-- Sugerencia de Maridaje / Upselling -->
                 <div id="ai-upsell-box" class="upsell-strip hidden"></div>
 
                 <div class="customer-form-compact">
                   <div class="form-group">
-                    <label>A nombre de quién *</label>
+                    <label>Tu Nombre *</label>
                     <input type="text" id="cust-name" placeholder="Ej: Martín Gómez" />
                   </div>
                   <div class="form-group" id="address-field-row">
@@ -312,7 +307,7 @@
                       </select>
                     </div>
                     <div class="form-group">
-                      <label>Indicaciones para cocina</label>
+                      <label>Notas para tu pedido</label>
                       <input type="text" id="cust-notes" placeholder="Ej: Bien dorada, timbre roto..." />
                     </div>
                   </div>
@@ -321,7 +316,7 @@
                 <div class="ticket-totals" id="totals-breakdown"></div>
 
                 <button type="button" class="btn-terracotta btn-block btn-lg" onclick="submitFinalOrder()">
-                  🔥 Marchar Pedido a Cocina
+                  ✅ Confirmar Pedido
                 </button>
               </div>
             </div>
@@ -338,11 +333,23 @@
     <div class="container section-pad">
       <div class="screen-heading">
         <div>
-          <span class="eyebrow-tag">🪑 GESTIÓN INTELIGENTE DE SALÓN Y PATIO</span>
-          <h2>Plano de Mesas en Vivo & Reservas sin Teléfono</h2>
+          <span class="eyebrow-tag">🪑 RESERVA DE MESAS SIN TELÉFONO • MESAS MODULARES Y FLEXIBLES</span>
+          <h2>Plano del Salón y Patio en Vivo</h2>
           <p class="sub-copy">
-            Elegí tu mesa en el mapa del bodegón o pedile al Conserje IA que te asigne lugar según la cantidad de comensales. Se sincroniza al instante con la recepción del local.
+            Elegí tu mesa en el plano o pedile a Don Vito que te reserve lugar. <strong>¿Son un grupo impar (3, 5, 7) o más de 8 personas?</strong> Nuestras mesas son modulares: agregamos sillas cómodas en cabecera o unimos mesas contiguas sin cargo extra.
           </p>
+        </div>
+      </div>
+
+      <!-- Aviso explicativo de flexibilidad de mesas (3, 5, 7 y grupos grandes) -->
+      <div class="seating-flex-banner">
+        <div class="flex-item">
+          <strong>👥 ¿Son 3, 5 o 7 personas?</strong>
+          <span>Te asignamos una mesa amplia (de 4, 6 u 8) o sumamos silla de cabecera cómoda para que nadie quede apretado.</span>
+        </div>
+        <div class="flex-item">
+          <strong>🍻 ¿Mesa grande de 8 a 12 amigos?</strong>
+          <span>Unimos mesas contiguas en el Salón Pellegrini o en el Patio de Parra para armar una sola mesa larga.</span>
         </div>
       </div>
 
@@ -359,41 +366,61 @@
 
         <div class="reservation-form-card">
           <h3>Reservar Mesa al Instante</h3>
-          <p class="sub-copy">Confirmación inmediata por sistema sin esperar a que atiendan el teléfono fijo.</p>
+          <p class="sub-copy">Seleccioná cuántos son y adaptamos el armado de la mesa automáticamente.</p>
 
           <form onsubmit="handleManualReservationSubmit(event)" class="res-form">
-            <div class="form-group">
-              <label>Mesa Seleccionada en el Plano</label>
-              <input type="text" id="res-table-selected" readonly value="Mesa #4 — Salón Histórico (6 pers.)" class="readonly-input" />
-            </div>
-            <div class="form-group">
-              <label>Nombre y Apellido *</label>
-              <input type="text" id="res-name" required placeholder="Ej: Carolina Méndez" />
-            </div>
             <div class="form-row-split">
               <div class="form-group">
-                <label>Comensales</label>
-                <select id="res-people">
+                <label>Cantidad de Personas *</label>
+                <select id="res-people" onchange="autoMatchTableForPeopleCount()">
+                  <option value="1">1 persona</option>
                   <option value="2">2 personas</option>
+                  <option value="3">3 personas (Mesa de 4 / +Silla cabecera)</option>
                   <option value="4" selected>4 personas</option>
+                  <option value="5">5 personas (Mesa de 6 / +Silla cabecera)</option>
                   <option value="6">6 personas</option>
+                  <option value="7">7 personas (Mesa de 8 / +Cabecera)</option>
                   <option value="8">8 personas (Mesa grande)</option>
+                  <option value="10">9 a 10 personas (Unión de 2 mesas)</option>
+                  <option value="12">11 a 12 personas (Mesa larga armada)</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Turno de Hoy</label>
+                <label>Horario de Hoy *</label>
                 <select id="res-time">
                   <option value="20:00 hs">20:00 hs (1° Turno)</option>
                   <option value="21:00 hs">21:00 hs</option>
-                  <option value="21:30 hs" selected>21:30 hs (Hora Pico)</option>
+                  <option value="21:30 hs" selected>21:30 hs (Turno Central)</option>
                   <option value="22:30 hs">22:30 hs (2° Turno)</option>
                 </select>
               </div>
             </div>
+
             <div class="form-group">
-              <label>Preferencias (Celíacos, Cumpleaños, Silla bebé)</label>
-              <input type="text" id="res-notes" placeholder="Ej: 1 invitado celíaco, festejamos cumpleaños" />
+              <label>Mesa y Armado Asignado (Podés cambiar haciendo clic en el plano)</label>
+              <input type="text" id="res-table-selected" readonly value="Mesa #3 — Salón Histórico (4 cubiertos)" class="readonly-input" />
             </div>
+
+            <div class="form-group">
+              <label>Configuración Especial de Sillas / Mesa</label>
+              <select id="res-seating-setup">
+                <option value="Armado estándar cómodo">Armado estándar cómodo según comensales</option>
+                <option value="Sumar silla extra en cabecera">🪑 Sumar silla extra en cabecera (Ideal 3, 5 o 7 pers.)</option>
+                <option value="Unir mesas contiguas">🔗 Unir mesas contiguas (Para grupos grandes)</option>
+                <option value="Incluir sillita alta para niño/bebé">👶 Incluir sillita alta para niño / bebé</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>A nombre de quién *</label>
+              <input type="text" id="res-name" required placeholder="Ej: Carolina Méndez" />
+            </div>
+
+            <div class="form-group">
+              <label>Aclaraciones (Celíacos, Cumpleaños, Preferencia de ubicación)</label>
+              <input type="text" id="res-notes" placeholder="Ej: 1 invitado celíaco, cerca del calefactor..." />
+            </div>
+
             <button type="submit" class="btn-terracotta btn-block">
               📅 Confirmar Reserva de Mesa
             </button>
@@ -409,7 +436,7 @@
   </main>
 
   <!-- ======================================================================= -->
-  <!-- PANTALLA 3: SEGUIMIENTO DE COMANDA EN TIEMPO REAL (TRACKER)             -->
+  <!-- PANTALLA 3: SEGUIMIENTO DE MI PEDIDO EN TIEMPO REAL                     -->
   <!-- ======================================================================= -->
   <main id="screen-tracker" class="app-screen">
     <div class="container section-pad">
@@ -418,16 +445,16 @@
   </main>
 
   <!-- ======================================================================= -->
-  <!-- PANTALLA 4: PANEL DE ADMINISTRACIÓN, GESTIÓN DE CARTA Y COMANDERA POS   -->
+  <!-- PANTALLA 4: PANEL DE ADMINISTRACIÓN, GESTIÓN DE CARTA Y COCINA          -->
   <!-- ======================================================================= -->
   <main id="screen-admin" class="app-screen">
     <div class="container section-pad">
       <div class="pos-header">
         <div>
           <span class="eyebrow-tag">👨‍🍳 SISTEMA DE GESTIÓN & BACKOFFICE DEL COMERCIO</span>
-          <h2>Administración de Carta, Precios, Stock y Comandas</h2>
+          <h2>Administración de Carta, Precios, Stock y Pedidos</h2>
           <p class="sub-copy">
-            Desde acá el encargado sube nuevos platos, actualiza precios, controla el stock y despacha los pedidos tomados por la IA. Todo cambio impacta en vivo en la tienda y en el cerebro del Conserje IA.
+            Desde acá el encargado sube nuevos platos, actualiza precios, controla el stock y despacha los pedidos. Todo cambio impacta en vivo en la tienda y en el asistente.
           </p>
         </div>
         <div class="pos-actions">
@@ -435,7 +462,10 @@
             ➕ Subir Nuevo Plato / Producto
           </button>
           <button class="btn-outline-dark" onclick="simulateIncomingWhatsAppOrder()">
-            ⚡ Simular Pedido IA Entrante
+            ⚡ Simular Pedido Entrante
+          </button>
+          <button class="btn-outline-dark" onclick="openApiKeyModal()" title="Configurar API Key de OpenAI">
+            🔑 Configurar API IA
           </button>
         </div>
       </div>
@@ -443,19 +473,19 @@
       <!-- KPIs de Negocio -->
       <div class="pos-metrics-grid">
         <div class="pos-metric-box">
-          <span class="pm-title">Comandas Tomadas por IA</span>
+          <span class="pm-title">Pedidos Procesados Hoy</span>
           <strong class="pm-val" id="kpi-orders-count">3</strong>
-          <span class="pm-sub">0 mensajes respondidos a mano</span>
+          <span class="pm-sub">100% automatizados sin esperas</span>
         </div>
         <div class="pos-metric-box">
           <span class="pm-title">Recaudación del Turno</span>
           <strong class="pm-val" id="kpi-revenue">$94.600</strong>
-          <span class="pm-sub">+28% conversión vs. WhatsApp</span>
+          <span class="pm-sub">+28% conversión vs. WhatsApp manual</span>
         </div>
         <div class="pos-metric-box">
           <span class="pm-title">Platos Activos en Carta</span>
           <strong class="pm-val" id="kpi-catalog-count">16</strong>
-          <span class="pm-sub">Sincronizados con OpenAI</span>
+          <span class="pm-sub">Sincronizados en tiempo real</span>
         </div>
         <div class="pos-metric-box">
           <span class="pm-title">Mesas Reservadas Hoy</span>
@@ -470,7 +500,7 @@
           🍕 Gestión de Productos, Precios y Stock (ABM)
         </button>
         <button class="adm-subtab" id="admtab-kanban" onclick="switchAdminSubtab('kanban')">
-          🔥 Comandera de Cocina en Vivo
+          🔥 Pedidos en Cocina en Vivo
         </button>
         <button class="adm-subtab" id="admtab-reservations" onclick="switchAdminSubtab('reservations')">
           🪑 Libro de Reservas de Mesas
@@ -507,12 +537,12 @@
         </div>
       </div>
 
-      <!-- VISTA ADMIN 2: COMANDERA KANBAN DE COCINA -->
+      <!-- VISTA ADMIN 2: PEDIDOS EN COCINA -->
       <div id="admview-kanban" class="adm-view">
         <div class="pos-kanban">
           <div class="pos-col">
             <div class="pos-col-head head-new">
-              <span>📥 A marchar (Entrantes IA)</span>
+              <span>📥 Nuevos Pedidos Recibidos</span>
               <strong id="count-new">0</strong>
             </div>
             <div class="pos-col-body" id="kanban-new"></div>
@@ -528,7 +558,7 @@
 
           <div class="pos-col">
             <div class="pos-col-head head-ready">
-              <span>🛵 En Reparto / Mostrador</span>
+              <span>🛵 En Reparto / Listos</span>
               <strong id="count-ready">0</strong>
             </div>
             <div class="pos-col-body" id="kanban-ready"></div>
@@ -541,7 +571,7 @@
         <div class="pos-card">
           <div class="pos-card-head">
             <h3>🪑 Libro de Reservas del Turno Noche</h3>
-            <p class="sub-copy">Reservas tomadas automáticamente desde el chat con IA y el plano interactivo de mesas.</p>
+            <p class="sub-copy">Reservas tomadas automáticamente desde el chat y el plano interactivo de mesas (con detalle de sillas extra o unión de mesas).</p>
           </div>
           <div class="stock-table" id="admin-reservations-list"></div>
         </div>
@@ -558,7 +588,7 @@
         <span class="eyebrow-tag">🏆 HACKATÓN DONWEB DAY ROSARIO 2026 • "DEL PROBLEMA AL SERVIDOR"</span>
         <h2>Informe de Solución: Digitalización con IA para Gastronomía Local</h2>
         <p class="lead-paragraph">
-          <strong>La Cantina de Don Brasa</strong> demuestra cómo un comercio tradicional rosarino pasa de perder ventas por atender WhatsApp y teléfono a mano, a operar con una aplicación web integral donde la Inteligencia Artificial conversa, presupuesta, interpreta audios/mensajes, toma reservas en plano y despacha comandas a cocina.
+          <strong>La Cantina de Don Brasa</strong> demuestra cómo un comercio tradicional rosarino pasa de perder ventas por atender WhatsApp y teléfono a mano, a operar con una aplicación web integral donde la Inteligencia Artificial conversa, recomienda según los gustos de los comensales, interpreta audios/mensajes, toma reservas modulares en plano y envía los pedidos directo a la cocina.
         </p>
 
         <div class="report-columns">
@@ -574,10 +604,9 @@
           <div class="report-block">
             <h3>2. Diferenciales de Nuestra Solución Web + IA</h3>
             <ul>
-              <li><strong>Conserje "Don Vito" con Salidas Estructuradas (OpenAI JSON Mode):</strong> No es un chatbot pasivo. Ejecuta acciones sobre el carrito (<code>autoCartAdd</code>), arma combos matemáticos ajustados al presupuesto del grupo (<code>suggestedItems</code>) y registra reservas (<code>reservation</code>).</li>
-              <li><strong>Transformador de WhatsApp y Transcriptor de Audio:</strong> Convierte mensajes informales de clientes en comandas estructuradas con dirección, método de pago y cálculo automático de envío.</li>
+              <li><strong>Conserje "Don Vito" con Salidas Estructuradas (OpenAI JSON Mode):</strong> No es un chatbot pasivo. Ejecuta acciones sobre el carrito (<code>autoCartAdd</code>), sugiere combinaciones según los gustos y antojos del grupo (<code>suggestedItems</code>) y gestiona reservas inteligentes (<code>reservation</code>).</li>
+              <li><strong>Gestión Inteligente de Mesas Impares (3, 5, 7) y Grupos Grandes:</strong> El sistema asigna automáticamente mesas donde el grupo esté cómodo, permitiendo agregar sillas en cabecera o unir mesas contiguas.</li>
               <li><strong>Panel Admin con ABM de Productos y Precios Sincronizado con la IA:</strong> El comerciante puede crear nuevos platos con foto, modificar precios o pausar stock en tiempo real, actualizando al instante el contexto del modelo de IA.</li>
-              <li><strong>Experiencia Multi-Pantalla 100% Responsive:</strong> Carta con personalización de platos, Plano Interactivo de Mesas, Seguimiento de Comanda en Vivo y Comandera POS de Cocina.</li>
             </ul>
           </div>
         </div>
@@ -602,12 +631,12 @@
           </div>
         </div>
         <p class="footer-desc">
-          Tradición gastronómica rosarina desde 1986 en el corredor Pellegrini, ahora potenciada con atención, pedidos y reservas automatizadas 24/7 mediante Inteligencia Artificial.
+          Tradición gastronómica rosarina desde 1986 en el corredor Pellegrini, con atención de pedidos y reservas de salón disponibles al instante las 24 hs.
         </p>
         <div class="footer-badges">
           <span class="f-badge">🔥 Horno a Leña 430°C</span>
           <span class="f-badge">🌾 Cocina Sin TACC Aislada</span>
-          <span class="f-badge">🤖 OpenAI Integrado</span>
+          <span class="f-badge">🪑 Patio & Salón Climatizado</span>
         </div>
       </div>
 
@@ -617,19 +646,19 @@
           <li>📍 <strong>Av. Pellegrini 1540</strong>, Rosario, Santa Fe</li>
           <li>🕒 <strong>Martes a Domingos:</strong> 19:00 a 00:45 hs</li>
           <li>🛵 <strong>Radio de Delivery:</strong> Centro, Macrocentro, Pichincha, Abasto y Echesortu</li>
-          <li>💳 <strong>Pagos:</strong> Efectivo (-10% Take Away), Transferencia (Alias: <code>CANTINA.BRASA</code>) y Mercado Pago</li>
+          <li>💳 <strong>Pagos:</strong> Efectivo (-10% Retiro), Transferencia (Alias: <code>CANTINA.BRASA</code>) y Mercado Pago</li>
         </ul>
       </div>
 
       <div class="footer-col">
-        <h4>Accesos de la Plataforma</h4>
+        <h4>Secciones de la Cantina</h4>
         <ul class="footer-links">
-          <li><button onclick="navigateApp('menu')">🍽️ Carta Digital & Pedidos</button></li>
-          <li><button onclick="openMobileAssistant()">💬 Hablar con Don Vito (Conserje IA)</button></li>
-          <li><button onclick="openWhatsAppParserView()">📲 Transformador de WhatsApp a Comanda</button></li>
+          <li><button onclick="navigateApp('menu')">🍽️ Carta Digital & Carrito</button></li>
+          <li><button onclick="openMobileAssistant()">💬 Consultar a Don Vito (Mozo Virtual)</button></li>
+          <li><button onclick="openWhatsAppParserView()">📲 Cargar Pedido Rápido desde Texto/Audio</button></li>
           <li><button onclick="navigateApp('tables')">🪑 Plano de Salón y Reserva de Mesas</button></li>
-          <li><button onclick="navigateApp('tracker')">🧾 Seguimiento de Comanda en Vivo</button></li>
-          <li><button onclick="navigateApp('admin')">👨‍🍳 Panel Administrador (ABM Precios & Cocina)</button></li>
+          <li><button onclick="navigateApp('tracker')">🛵 Seguimiento de Mi Pedido en Vivo</button></li>
+          <li><button onclick="navigateApp('admin')">👨‍🍳 Acceso Encargado / Administración</button></li>
         </ul>
       </div>
 
@@ -640,7 +669,7 @@
         </p>
         <div class="footer-cta-box">
           <button class="btn-terracotta btn-sm btn-block" onclick="navigateApp('admin')">
-            ⚙️ Ir al Panel Admin (Subir Platos / Editar Precios)
+            ⚙️ Panel Admin (Subir Platos / Editar Precios)
           </button>
           <a href="https://github.com/alebati123/Donwebday" target="_blank" rel="noopener noreferrer" class="footer-gh-link">
             📦 Ver Repositorio e Informe en GitHub →
@@ -665,15 +694,15 @@
     </button>
     <button class="mnav-btn" id="mnav-ai" onclick="openMobileAssistant()">
       <span class="mnav-icon">💬</span>
-      <span class="mnav-label">Mozo IA</span>
+      <span class="mnav-label">Mozo</span>
     </button>
     <button class="mnav-btn" id="mnav-tables" onclick="navigateApp('tables')">
       <span class="mnav-icon">🪑</span>
       <span class="mnav-label">Mesas</span>
     </button>
     <button class="mnav-btn" id="mnav-tracker" onclick="navigateApp('tracker')">
-      <span class="mnav-icon">🧾</span>
-      <span class="mnav-label">Seguir</span>
+      <span class="mnav-icon">🛵</span>
+      <span class="mnav-label">Mi Pedido</span>
     </button>
     <button class="mnav-btn" id="mnav-admin" onclick="navigateApp('admin')">
       <span class="mnav-icon">👨‍🍳</span>
@@ -766,19 +795,19 @@
 
         <div class="modal-footer-btns" style="margin-top:10px;">
           <button type="button" class="btn-outline-dark" onclick="closeProductEditorModal()">Cancelar</button>
-          <button type="submit" class="btn-terracotta">💾 Guardar en la Carta y Actualizar IA</button>
+          <button type="submit" class="btn-terracotta">💾 Guardar en la Carta</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL DE CONFIGURACIÓN SEGURA DE OPENAI API KEY -->
+  <!-- MODAL DE CONFIGURACIÓN SEGURA DE OPENAI API KEY (SOLO DESDE ADMIN) -->
   <div id="apikey-modal" class="modal-overlay hidden" onclick="closeApiKeyModal()">
     <div class="modal-card" onclick="event.stopPropagation()">
       <button class="modal-close-x" onclick="closeApiKeyModal()">✕</button>
-      <h3>🔑 Conexión con OpenAI API</h3>
+      <h3>🔑 Conexión con OpenAI API (Panel Admin)</h3>
       <p class="sub-copy">
-        Podés configurar la API Key mediante variable de entorno en el servidor (<code>.env</code>) o pegarla acá para activarla en caliente sin subirla a GitHub.
+        El servidor ya cuenta con la clave configurada en <code>.env</code>. Si necesitás reemplazarla en caliente, podés ingresarla acá.
       </p>
       <div class="form-group">
         <label>OpenAI API Key (<code>sk-...</code>)</label>
@@ -787,14 +816,14 @@
       <div class="form-group">
         <label>Modelo de OpenAI</label>
         <select id="modal-model-select">
-          <option value="gpt-4o-mini">gpt-4o-mini (Velocidad ideal para atención en vivo)</option>
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
           <option value="gpt-4o">gpt-4o</option>
         </select>
       </div>
       <div id="apikey-status-msg" class="status-feedback"></div>
       <div class="modal-footer-btns">
-        <button class="btn-outline-dark" onclick="closeApiKeyModal()">Cancelar</button>
-        <button class="btn-terracotta" onclick="saveApiKeyConfig()">Guardar y Conectar</button>
+        <button class="btn-outline-dark" onclick="closeApiKeyModal()">Cerrar</button>
+        <button class="btn-terracotta" onclick="saveApiKeyConfig()">Guardar</button>
       </div>
     </div>
   </div>
