@@ -1363,12 +1363,12 @@ function localSmartEngine(rawText) {
   else if (text.includes('efectivo')) result.extractedOrder.paymentMethod = 'Efectivo';
   else if (text.includes('mercado pago') || text.includes('mercadopago')) result.extractedOrder.paymentMethod = 'Mercado Pago';
 
-  // Reserva de mesa inteligente (maneja 3, 5, 7 y grupos grandes con mesas de 4, 6, 8 o unión)
-  if (
+  // Reserva de mesa inteligente: SOLO si el usuario pide explícitamente reservar mesa (no en preguntas de comida)
+  const isExplicitReservation =
     text.includes('reserv') ||
-    (text.includes('mesa') &&
-      (text.includes('personas') || text.includes('patio') || text.includes('21') || text.includes('22') || text.includes('somos')))
-  ) {
+    (text.includes('guardame una mesa') || text.includes('anotanos una mesa') || text.includes('quiero una mesa'));
+
+  if (isExplicitReservation) {
     const peopleMatch = text.match(/(\d+)\s*(?:personas|amigos|cubiertos|comensales)/);
     const timeMatch = text.match(/(\d{1,2}(?::\d{2})?)\s*(?:hs|horas)?/);
     const area = text.includes('patio') ? 'Patio de Parra & Guirnaldas' : 'Salón Histórico (Pellegrini)';

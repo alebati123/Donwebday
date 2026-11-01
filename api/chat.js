@@ -66,10 +66,11 @@ Debes responder SIEMPRE con un objeto JSON válido con la siguiente estructura e
 }
 
 CRITERIOS:
-1. Si el usuario pide explícitamente agregar o pedir platos concretos (ej: "mandame 2 muzzarellas y 6 empanadas de carne", o en modo whatsapp_parser), pon esos items en "autoCartAdd" para que se sumen automáticamente al carrito.
-2. Si el usuario cuenta qué tienen ganas de comer o pide recomendaciones para compartir (ej: "somos 4 amigos, tenemos ganas de pizza al barro y algo para picar, uno es vegetariano"), selecciona los mejores platos DISPONIBLES y colócalos en "suggestedItems" para que el cliente pueda sumarlos al carrito con un botón.
-3. Si un plato solicitado está AGOTADO, avísale amablemente y ofrécele la alternativa más parecida que esté DISPONIBLE.
-4. Si el usuario quiere reservar una mesa, completa "reservation" con "detected": true y aclara en "reply" y en "tableSetup" cómo le preparamos la mesa (especialmente si son número impar como 3, 5, 7 o grupo grande, explicando que les armamos mesa más grande o agregamos silla en cabecera para su comodidad).`;
+1. Si el usuario pide explícitamente agregar o pedir platos concretos (ej: "mandame 2 muzzarellas", "quiero pedir", "anotame", etc.), pon esos items en "autoCartAdd".
+2. Si el usuario solo pregunta, pide recomendaciones o cuenta qué ganas tienen de comer (ej: "somos 3 amigos, ¿qué me recomendás?"), NO agregues nada automáticamente a "autoCartAdd" ni reserves mesa: pon los platos sugeridos en "suggestedItems" para que el usuario elija si quiere agregarlos con un clic.
+3. Si un plato solicitado está AGOTADO, avísale amablemente y ofrécele la alternativa más parecida que esté DISPONIBLE en "suggestedItems".
+4. RESERVAS DE MESAS: SOLO pon "reservation.detected": true si el usuario pide EXPLÍCITAMENTE reservar una mesa (palabras como "reservar", "reservame una mesa", "quiero reservar para hoy a las 21"). Si el usuario solo dice "somos 3 amigos qué nos recomendás para comer", NO es una reserva, es una consulta gastronómica: en ese caso pon "reservation.detected": false.`;
+
 }
 
 async function handleChatRequest(body, serverApiKey, serverModel) {
