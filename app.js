@@ -1,177 +1,176 @@
 // ============================================================================
-// DON BRASA IA — SISTEMA INTEGRAL DE ATENCIÓN, PEDIDOS Y RESERVAS CON IA
-// Hackatón DonWeb Day Rosario 2026 ("Del problema al servidor")
+// LA CANTINA DE DON BRASA — PLATAFORMA INTEGRAL DE BODEGÓN CON IA
+// Carta Interactiva • Conserje IA • Audio/Texto WhatsApp • Mapa de Mesas • POS
 // ============================================================================
 
 const BUSINESS_INFO = {
-  name: 'Don Brasa — Bodegón & Pizzería Rosarina',
+  name: 'La Cantina de Don Brasa — Bodegón & Pizzería',
   address: 'Av. Pellegrini 1540, Rosario',
   deliveryFee: 1800,
   freeDeliveryMin: 35000,
   takeawayDiscount: 0.10
 };
 
-// Catálogo en tiempo real (sincronizado entre Tienda, Chatbot IA y Panel de Cocina)
 const INITIAL_CATALOG = [
   {
     id: 'p1',
-    name: 'Pizza Muzzarella Clásica a la Piedra',
+    name: 'Muzzarella al Molde de Masa Madre',
     category: 'Pizzas',
     price: 11500,
-    emoji: '🍕',
+    image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['popular', 'veggie'],
-    description: 'Salsa de tomates mendocinos, 400g de muzzarella seleccionada, orégano y aceitunas verdes (8 porciones).'
+    description: 'Fermentación de 48 hs, salsa de tomates perita mendocinos, 450g de muzzarella, orégano de traslasierra y aceitunas verdes (8 porciones).'
   },
   {
     id: 'p2',
-    name: 'Pizza Napolitana Especial con Ajo',
+    name: 'Napolitana Especial al Horno de Barro',
     category: 'Pizzas',
     price: 13200,
-    emoji: '🍅',
+    image: 'https://images.unsplash.com/photo-1595854341625-f33ee10dbf94?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['popular', 'veggie'],
-    description: 'Muzzarella, rodajas de tomate fresco, provenzal casero, queso parmesano gratinado y oliva.'
+    description: 'Rodajas de tomate redondo fresco, provenzal de ajo asado y perejil, abundante muzzarella y lluvia de reggianito rallado.'
   },
   {
     id: 'p3',
-    name: 'Pizza Fugazzeta Rellena Don Brasa',
+    name: 'Fugazzeta Rellena de la Cantina',
     category: 'Pizzas',
     price: 15400,
-    emoji: '🧅',
+    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=640&q=80',
     inStock: true,
-    tags: ['veggie'],
-    description: 'Doble masa rellena con abundante muzzarella y jamón (opcional sin jamón), cubierta de cebolla caramelizada.'
+    tags: ['veggie', 'popular'],
+    description: 'Doble masa rellena con 500g de muzzarella y provolone, coronada con cebolla blanca y morada pluma gratinada a leña.'
   },
   {
     id: 'p4',
-    name: 'Pizza Rúcula, Crudo y Parmesano',
+    name: 'Rúcula Salvaje, Jamón Crudo & Parmesano',
     category: 'Pizzas',
     price: 15800,
-    emoji: '🥬',
+    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=640&q=80',
     inStock: true,
-    tags: ['popular'],
-    description: 'Base de muzzarella, rúcula fresca recién cortada, fetas de jamón crudo serrano y escamas de reggianito.'
+    tags: [],
+    description: 'Base crocante a la piedra, muzzarella fundida, rúcula recién cortada, fetas de jamón crudo estacionado 12 meses y oliva.'
   },
   {
     id: 'p5',
-    name: 'Pizza Muzzarella SIN TACC (Apta Celíacos)',
+    name: 'Pizza Muzzarella SIN TACC (Cocina Aislada)',
     category: 'Pizzas',
     price: 13900,
-    emoji: '🌾',
+    image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['sintacc', 'veggie'],
-    description: 'Elaborada en sector aislado libre de gluten con premezcla certificada y muzzarella de primera calidad (Individual grande).'
+    description: 'Elaborada en horno exclusivo libre de gluten con harinas certificadas, salsa casera y muzzarella seleccionada.'
   },
   {
     id: 'e1',
     name: 'Empanada de Carne Cortada a Cuchillo',
     category: 'Empanadas',
     price: 1900,
-    emoji: '🥟',
+    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['popular'],
-    description: 'Roast beef braseado a cuchillo, cebolla de verdeo, huevo de campo y comino suave al horno de barro.'
+    description: 'Roast beef braseado lento, cebolla de verdeo, huevo de campo y comino suave, dorada al horno de barro.'
   },
   {
     id: 'e2',
-    name: 'Empanada de Jamón y Queso Fundido',
+    name: 'Empanada de Jamón Natural y Queso',
     category: 'Empanadas',
     price: 1800,
-    emoji: '🧀',
+    image: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: [],
-    description: 'Jamón cocido natural en cubos y abundante muzzarella derretida.'
+    description: 'Jamón cocido horneado en cubos y corazón rebosante de muzzarella derretida.'
   },
   {
     id: 'e3',
-    name: 'Empanada Humita & Queso (Veggie)',
+    name: 'Empanada de Humita Norteña (Veggie)',
     category: 'Empanadas',
     price: 1850,
-    emoji: '🌽',
+    image: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['veggie'],
-    description: 'Choclo cremoso condimentado con salsa blanca casera, albahaca y cubos de muzzarella.'
+    description: 'Choclo amarillo cremoso, zapallo cabutia, albahaca fresca y dados de queso cremoso.'
   },
   {
     id: 'e4',
-    name: 'Empanada Caprese Vegana / Veggie',
+    name: 'Empanada Caprese & Albahaca (Veggie)',
     category: 'Empanadas',
     price: 1850,
-    emoji: '🌿',
+    image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['veggie'],
-    description: 'Tomate concassé, albahaca fresca, aceite de oliva y queso o muzzarella de almendras.'
+    description: 'Tomates asados al quebracho, muzzarella hilada, hojas de albahaca y toque de pimienta negra.'
   },
   {
     id: 'b1',
-    name: 'Milanesa Napolitana XXL para Compartir (2 a 3 pers.)',
+    name: 'Milanesa Napolitana XXL de Bodegón (2 a 3 pers.)',
     category: 'Bodegón',
     price: 22500,
-    emoji: '🥩',
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['popular'],
-    description: 'Clásico de Pellegrini: peceto tiernizado con salsa fileto, jamón, muzzarella y montaña de papas fritas caseras.'
+    description: 'Nalga tiernizada panada a mano con salsa fileto, jamón, muzzarella gratinada y bandeja de papas fritas bastón.'
   },
   {
     id: 'b2',
-    name: 'Sorrentinos Caseros de Calabaza y Muzzarella',
+    name: 'Sorrentinos de Calabaza Asada & Ciboulette',
     category: 'Bodegón',
     price: 11800,
-    emoji: '🍝',
+    image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['veggie'],
-    description: 'Pasta artesanal con salsa rosa o crema de hongos y queso estacionado.'
+    description: 'Pasta amasada en casa rellena de cabutia al horno y muzzarella, con salsa rosa o manteca de salvia.'
   },
   {
     id: 'b3',
-    name: 'Porción de Fainá Clásico al Horno',
+    name: 'Fainá Crocante al Molde de Cobre',
     category: 'Bodegón',
     price: 2400,
-    emoji: '🥞',
+    image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['sintacc', 'veggie'],
-    description: 'Harina de garbanzos pura, crocante por fuera y cremosa por dentro.'
+    description: 'Pura harina de garbanzos, aceite de oliva virgen y pimienta recién molida.'
   },
   {
     id: 'd1',
     name: 'Gaseosa Línea Coca-Cola 1.5L',
     category: 'Bebidas y Postres',
     price: 4200,
-    emoji: '🥤',
+    image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['sintacc', 'veggie'],
-    description: 'Coca-Cola Original o Sin Azúcar 1.5 Litros bien fría.'
+    description: 'Botella familiar de 1.5 litros (Original o Sin Azúcar) bien helada.'
   },
   {
     id: 'd2',
-    name: 'Limonada Casera con Menta y Jengibre (1L)',
+    name: 'Jarra de Limonada con Menta y Jengibre (1L)',
     category: 'Bebidas y Postres',
     price: 4500,
-    emoji: '🍋',
+    image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['sintacc', 'veggie', 'popular'],
-    description: 'Exprimida en el momento con limones frescos, menta de huerta y jengibre.'
+    description: 'Exprimida en el momento con limones de estación, almíbar suave, jengibre y menta fresca.'
   },
   {
     id: 'd3',
-    name: 'Cerveza Artesanal Patagonia Amber Lager 730ml',
+    name: 'Vermut Rosso de la Casa con Soda & Rodaja Naranja',
     category: 'Bebidas y Postres',
-    price: 6800,
-    emoji: '🍺',
+    price: 5400,
+    image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=640&q=80',
     inStock: true,
-    tags: ['veggie'],
-    description: 'Botella grande de 730ml ideal para maridar con pizzas y picadas.'
+    tags: ['veggie', 'popular'],
+    description: 'Macerado botánico tradicional servido con golpe de sifón y naranja deshidratada.'
   },
   {
     id: 'd4',
-    name: 'Flan Casero Mixto de Bodegón',
+    name: 'Flan Casero de 12 Yemas Mixto',
     category: 'Bebidas y Postres',
     price: 4900,
-    emoji: '🍮',
+    image: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=640&q=80',
     inStock: true,
     tags: ['sintacc', 'veggie'],
-    description: 'Con abundante dulce de leche colonial y crema chantilly batida.'
+    description: 'Receta histórica de la abuela con dulce de leche repostero y crema chantilly batida.'
   }
 ];
 
@@ -181,8 +180,24 @@ let cart = [];
 let deliveryType = 'delivery';
 let chatHistory = [];
 let suggestedCombosStore = {};
+let activeOrderId = 'DB-1041';
+let selectedTableId = 'T4';
 
-// Pedidos iniciales en el Tablero Kanban del negocio para mostrar actividad real
+// Mapa de Mesas en Vivo del Bodegón
+let restaurantTables = [
+  { id: 'T1', number: 1, zone: 'Salón Histórico (Pellegrini)', capacity: 2, status: 'free', guest: '' },
+  { id: 'T2', number: 2, zone: 'Salón Histórico (Pellegrini)', capacity: 4, status: 'occupied', guest: 'Familia Benítez (21:00)' },
+  { id: 'T3', number: 3, zone: 'Salón Histórico (Pellegrini)', capacity: 4, status: 'free', guest: '' },
+  { id: 'T4', number: 4, zone: 'Salón Histórico (Pellegrini)', capacity: 6, status: 'free', guest: '' },
+  { id: 'T5', number: 5, zone: 'Patio de Parra & Guirnaldas', capacity: 4, status: 'free', guest: '' },
+  { id: 'T6', number: 6, zone: 'Patio de Parra & Guirnaldas', capacity: 4, status: 'occupied', guest: 'Camila & Amigos (22:00)' },
+  { id: 'T7', number: 7, zone: 'Patio de Parra & Guirnaldas', capacity: 6, status: 'free', guest: '' },
+  { id: 'T8', number: 8, zone: 'Patio de Parra & Guirnaldas', capacity: 8, status: 'free', guest: '' },
+  { id: 'T9', number: 9, zone: 'Barra de Vermut & Picadas', capacity: 2, status: 'free', guest: '' },
+  { id: 'T10', number: 10, zone: 'Barra de Vermut & Picadas', capacity: 2, status: 'free', guest: '' }
+];
+
+// Comandas iniciales en cocina
 let orders = [
   {
     id: 'DB-1041',
@@ -190,30 +205,30 @@ let orders = [
     address: '9 de Julio 1420 Piso 2 A',
     deliveryType: 'delivery',
     paymentMethod: 'Transferencia',
-    source: '🤖 BrasaIA (WhatsApp Parser)',
+    source: '📲 IA (WhatsApp Audio)',
     status: 'new',
-    time: 'Hace 3 min',
+    time: '20:42 hs',
     total: 29100,
     items: [
-      { name: 'Pizza Muzzarella Clásica a la Piedra', quantity: 1 },
-      { name: 'Empanada de Carne Cortada a Cuchillo', quantity: 6 },
-      { name: 'Gaseosa Línea Coca-Cola 1.5L', quantity: 1 }
+      { name: 'Muzzarella al Molde de Masa Madre', quantity: 1, notes: 'Bien dorada' },
+      { name: 'Empanada de Carne Cortada a Cuchillo', quantity: 6, notes: '' },
+      { name: 'Gaseosa Línea Coca-Cola 1.5L', quantity: 1, notes: '' }
     ]
   },
   {
     id: 'DB-1040',
     customerName: 'Tomás Ríos',
-    address: 'Retiro por el local (Av. Pellegrini 1540)',
+    address: 'Retiro en mostrador (Av. Pellegrini 1540)',
     deliveryType: 'takeaway',
-    paymentMethod: 'Efectivo (10% OFF)',
-    source: '🤖 BrasaIA (Combo Grupal)',
+    paymentMethod: 'Efectivo (-10%)',
+    source: '💬 IA (Combo Presupuesto)',
     status: 'cooking',
-    time: 'Hace 12 min',
+    time: '20:31 hs',
     total: 36450,
     items: [
-      { name: 'Milanesa Napolitana XXL para Compartir', quantity: 1 },
-      { name: 'Pizza Napolitana Especial con Ajo', quantity: 1 },
-      { name: 'Limonada Casera con Menta y Jengibre (1L)', quantity: 1 }
+      { name: 'Milanesa Napolitana XXL de Bodegón', quantity: 1, notes: 'Papas bien crocantes' },
+      { name: 'Napolitana Especial al Horno de Barro', quantity: 1, notes: '' },
+      { name: 'Jarra de Limonada con Menta y Jengibre (1L)', quantity: 1, notes: '' }
     ]
   },
   {
@@ -222,14 +237,14 @@ let orders = [
     address: 'Bv. Oroño 620 PB',
     deliveryType: 'delivery',
     paymentMethod: 'Mercado Pago',
-    source: '🤖 BrasaIA (Chat Web)',
+    source: '💬 IA (Menú Sin TACC)',
     status: 'ready',
-    time: 'Hace 24 min',
+    time: '20:18 hs',
     total: 29050,
     items: [
-      { name: 'Pizza Muzzarella SIN TACC (Apta Celíacos)', quantity: 1 },
-      { name: 'Empanada Humita & Queso (Veggie)', quantity: 4 },
-      { name: 'Flan Casero Mixto de Bodegón', quantity: 1 }
+      { name: 'Pizza Muzzarella SIN TACC (Cocina Aislada)', quantity: 1, notes: 'Utensilios sellados' },
+      { name: 'Empanada de Humita Norteña (Veggie)', quantity: 4, notes: '' },
+      { name: 'Flan Casero de 12 Yemas Mixto', quantity: 1, notes: '' }
     ]
   }
 ];
@@ -237,19 +252,21 @@ let orders = [
 let reservations = [
   {
     id: 'RES-201',
+    tableId: 'T2',
     name: 'Familia Benítez',
-    people: 5,
+    people: 4,
     time: '21:00 hs',
-    area: 'Salón Interior',
-    notes: '1 silla para bebé • Confirmado por BrasaIA'
+    area: 'Salón Histórico (Pellegrini)',
+    notes: '1 silla para bebé • Tomada por Don Vito IA'
   },
   {
     id: 'RES-202',
+    tableId: 'T6',
     name: 'Camila & Amigos',
     people: 4,
     time: '22:00 hs',
-    area: 'Patio Cervecero',
-    notes: 'Menú vegetariano y Sin TACC consultado con IA'
+    area: 'Patio de Parra & Guirnaldas',
+    notes: 'Opciones Veggie y Sin TACC consultadas con IA'
   }
 ];
 
@@ -259,41 +276,66 @@ let reservations = [
 document.addEventListener('DOMContentLoaded', () => {
   renderCatalog();
   renderCart();
+  renderTablesFloorplan();
+  renderOrderTracker();
   renderAdminDashboard();
   initWelcomeChat();
   checkServerAiStatus();
 });
 
-function switchMainView(viewName) {
-  document.querySelectorAll('.main-view').forEach((el) => el.classList.remove('active'));
-  document.querySelectorAll('.view-tab').forEach((el) => el.classList.remove('active'));
+// ============================================================================
+// NAVEGACIÓN MULTI-PANTALLA (DESKTOP & MOBILE APP)
+// ============================================================================
+function navigateApp(screenName) {
+  document.querySelectorAll('.app-screen').forEach((s) => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'));
+  document.querySelectorAll('.mnav-btn').forEach((b) => b.classList.remove('active'));
 
-  const targetView = document.getElementById(`view-${viewName}`);
-  const targetTab = document.getElementById(`tab-${viewName}`);
-  if (targetView) targetView.classList.add('active');
-  if (targetTab) targetTab.classList.add('active');
+  const screenEl = document.getElementById(`screen-${screenName}`);
+  const navEl = document.getElementById(`nav-${screenName}`);
+  const mnavEl = document.getElementById(`mnav-${screenName}`);
 
-  if (viewName === 'admin') {
-    renderAdminDashboard();
-  }
+  if (screenEl) screenEl.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  if (mnavEl) mnavEl.classList.add('active');
+
+  if (screenName === 'tables') renderTablesFloorplan();
+  if (screenName === 'tracker') renderOrderTracker();
+  if (screenName === 'admin') renderAdminDashboard();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function switchRightPanel(panelName) {
-  document.querySelectorAll('.rpanel').forEach((el) => el.classList.remove('active'));
-  document.querySelectorAll('.asst-tab').forEach((el) => el.classList.remove('active'));
+function switchRightTab(tabName) {
+  document.querySelectorAll('.dock-panel').forEach((p) => p.classList.remove('active'));
+  document.querySelectorAll('.dock-tab').forEach((t) => t.classList.remove('active'));
 
-  const panel = document.getElementById(`rpanel-${panelName}`);
-  const tab = document.getElementById(`rtab-${panelName}`);
+  const panel = document.getElementById(`rpanel-${tabName}`);
+  const tab = document.getElementById(`rtab-${tabName}`);
   if (panel) panel.classList.add('active');
   if (tab) tab.classList.add('active');
 }
 
+function openMobileAssistant() {
+  navigateApp('menu');
+  switchRightTab('chat');
+  const dock = document.getElementById('side-dock');
+  if (dock) dock.scrollIntoView({ behavior: 'smooth' });
+}
+
+function openMobileCartOrFocus() {
+  navigateApp('menu');
+  switchRightTab('cart');
+  const dock = document.getElementById('side-dock');
+  if (dock) dock.scrollIntoView({ behavior: 'smooth' });
+}
+
 // ============================================================================
-// CATÁLOGO INTERACTIVO
+// CARTA FOTOGRÁFICA Y MODAL DE PERSONALIZACIÓN DE PLATO
 // ============================================================================
 function selectCategory(cat) {
   currentCategory = cat;
-  document.querySelectorAll('.cat-pill').forEach((btn) => {
+  document.querySelectorAll('.cat-btn').forEach((btn) => {
     btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${cat}'`));
   });
   renderCatalog();
@@ -302,58 +344,70 @@ function selectCategory(cat) {
 function renderCatalog() {
   const grid = document.getElementById('catalog-grid');
   const query = (document.getElementById('catalog-search')?.value || '').toLowerCase().trim();
+  const onlySinTacc = document.getElementById('filter-sintacc')?.checked;
+  const onlyVeggie = document.getElementById('filter-veggie')?.checked;
 
   const filtered = catalog.filter((item) => {
-    const matchesCat =
-      currentCategory === 'all' ||
-      (currentCategory === 'diet'
-        ? item.tags.includes('sintacc') || item.tags.includes('veggie')
-        : item.category === currentCategory);
-
+    const matchesCat = currentCategory === 'all' || item.category === currentCategory;
+    const matchesSinTacc = !onlySinTacc || item.tags.includes('sintacc');
+    const matchesVeggie = !onlyVeggie || item.tags.includes('veggie');
     const matchesSearch =
       !query ||
       item.name.toLowerCase().includes(query) ||
       item.description.toLowerCase().includes(query) ||
-      item.tags.some((t) => t.toLowerCase().includes(query));
+      item.category.toLowerCase().includes(query);
 
-    return matchesCat && matchesSearch;
+    return matchesCat && matchesSinTacc && matchesVeggie && matchesSearch;
   });
 
   if (filtered.length === 0) {
-    grid.innerHTML = `<div class="text-muted" style="padding: 24px;">No encontramos platos con ese filtro. ¡Preguntale a BrasaIA en el chat para armar una alternativa!</div>`;
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 32px; text-align: center; background: #fff; border-radius: 12px; border: 1px dashed #c2b59e;">
+        <p style="font-weight:700; margin-bottom:6px;">No encontramos platos con esos filtros combinados.</p>
+        <p class="sub-copy">Preguntale a <strong>Don Vito (Conserje IA)</strong> en el mostrador derecho para que te arme una sugerencia a medida.</p>
+      </div>
+    `;
     return;
   }
 
   grid.innerHTML = filtered
     .map((item) => {
-      const badges = [];
+      const floatingTags = [];
       if (!item.inStock) {
-        badges.push(`<span class="tag-badge soldout">AGOTADO HOY</span>`);
+        floatingTags.push(`<span class="dish-tag soldout">AGOTADO EN COCINA</span>`);
       } else {
-        if (item.tags.includes('popular')) badges.push(`<span class="tag-badge popular">🔥 Más pedido</span>`);
-        if (item.tags.includes('sintacc')) badges.push(`<span class="tag-badge sintacc">🌾 Sin TACC</span>`);
-        if (item.tags.includes('veggie')) badges.push(`<span class="tag-badge veggie">🌱 Veggie</span>`);
+        if (item.tags.includes('popular')) floatingTags.push(`<span class="dish-tag popular">🔥 Clásico</span>`);
+        if (item.tags.includes('sintacc')) floatingTags.push(`<span class="dish-tag sintacc">🌾 Sin TACC</span>`);
+        if (item.tags.includes('veggie')) floatingTags.push(`<span class="dish-tag veggie">🌿 Veggie</span>`);
       }
 
       return `
-        <article class="product-card ${!item.inStock ? 'out-of-stock' : ''}">
+        <article class="dish-card ${!item.inStock ? 'sold-out' : ''}">
           <div>
-            <div class="prod-top">
-              <div class="prod-emoji">${item.emoji}</div>
-              <div class="prod-badges">${badges.join('')}</div>
+            <div class="dish-photo-wrap" onclick="openDishModal('${item.id}')">
+              <img src="${item.image}" alt="${item.name}" loading="lazy" />
+              <div class="dish-floating-tags">${floatingTags.join('')}</div>
             </div>
-            <h3 class="prod-title">${item.name}</h3>
-            <p class="prod-desc">${item.description}</p>
+            <div class="dish-body" onclick="openDishModal('${item.id}')">
+              <span class="dish-cat-label">${item.category}</span>
+              <h3 class="dish-title">${item.name}</h3>
+              <p class="dish-desc">${item.description}</p>
+            </div>
           </div>
-          <div class="prod-footer">
-            <span class="prod-price">$${item.price.toLocaleString('es-AR')}</span>
-            <button
-              class="btn-add-prod"
-              ${!item.inStock ? 'disabled' : ''}
-              onclick="addToCart('${item.id}', 1)"
-            >
-              ${item.inStock ? '+ Sumar' : 'Sin Stock'}
-            </button>
+          <div class="dish-footer">
+            <span class="dish-price">$${item.price.toLocaleString('es-AR')}</span>
+            <div class="dish-actions">
+              <button class="btn-customize" onclick="openDishModal('${item.id}')" title="Personalizar punto de cocción o notas">
+                Opciones
+              </button>
+              <button
+                class="btn-add-dish"
+                ${!item.inStock ? 'disabled' : ''}
+                onclick="addToCart('${item.id}', 1, '')"
+              >
+                ${item.inStock ? '+ Sumar' : 'Agotado'}
+              </button>
+            </div>
           </div>
         </article>
       `;
@@ -361,29 +415,83 @@ function renderCatalog() {
     .join('');
 }
 
+function openDishModal(dishId) {
+  const dish = catalog.find((p) => p.id === dishId);
+  if (!dish) return;
+
+  const modal = document.getElementById('dish-modal');
+  const body = document.getElementById('dish-modal-body');
+
+  body.innerHTML = `
+    <img src="${dish.image}" alt="${dish.name}" style="width:100%; height:200px; object-fit:cover; border-radius:10px; margin-bottom:12px;" />
+    <span class="eyebrow-tag">${dish.category}</span>
+    <h3 style="font-family:var(--font-serif); font-size:1.35rem; color:var(--green-bodegon); margin-bottom:6px;">${dish.name}</h3>
+    <p class="sub-copy" style="margin-bottom:14px;">${dish.description}</p>
+
+    <div class="form-group" style="margin-bottom:10px;">
+      <label>Punto de Cocción / Preparación en Horno de Barro</label>
+      <select id="modal-dish-doneness">
+        <option value="Punto clásico de la casa">Punto clásico de la casa</option>
+        <option value="Piso bien crocante al barro">Piso bien crocante al barro</option>
+        <option value="Bien dorada / gratinada">Bien dorada / gratinada</option>
+        <option value="Cortada en 12 porciones chicas">Cortada en 12 porciones chicas (Picada)</option>
+      </select>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Aclaraciones para el Maestro Pizzero / Cocina</label>
+      <input type="text" id="modal-dish-notes" placeholder="Ej: Sin aceitunas, poco ajo, mitad sin orégano..." />
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px dashed var(--border-warm);">
+      <strong style="font-family:var(--font-mono); font-size:1.25rem; color:var(--green-bodegon);">$${dish.price.toLocaleString('es-AR')}</strong>
+      <button
+        class="btn-terracotta"
+        ${!dish.inStock ? 'disabled' : ''}
+        onclick="confirmDishModalAdd('${dish.id}')"
+      >
+        ${dish.inStock ? '🛒 Agregar a mi Comanda' : 'Plato Agotado Hoy'}
+      </button>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+}
+
+function closeDishModal() {
+  document.getElementById('dish-modal').classList.add('hidden');
+}
+
+function confirmDishModalAdd(dishId) {
+  const doneness = document.getElementById('modal-dish-doneness')?.value || '';
+  const extraNotes = document.getElementById('modal-dish-notes')?.value.trim() || '';
+  const combinedNotes = [doneness !== 'Punto clásico de la casa' ? doneness : '', extraNotes].filter(Boolean).join(' • ');
+  addToCart(dishId, 1, combinedNotes);
+  closeDishModal();
+}
+
 // ============================================================================
-// CARRITO Y UPSELLING IA
+// COMANDA TÉRMICA (CARRITO) Y UPSELLING GASTRONÓMICO
 // ============================================================================
-function addToCart(productId, qty = 1) {
+function addToCart(productId, qty = 1, notes = '') {
   const product = catalog.find((p) => p.id === productId);
   if (!product || !product.inStock) return false;
 
-  const existing = cart.find((c) => c.id === productId);
+  const existing = cart.find((c) => c.id === productId && (c.notes || '') === (notes || ''));
   if (existing) {
     existing.quantity += qty;
   } else {
-    cart.push({ id: product.id, quantity: qty });
+    cart.push({ id: product.id, quantity: qty, notes: notes || '' });
   }
   renderCart();
   return true;
 }
 
-function changeCartQty(productId, delta) {
-  const idx = cart.findIndex((c) => c.id === productId);
-  if (idx === -1) return;
-  cart[idx].quantity += delta;
-  if (cart[idx].quantity <= 0) {
-    cart.splice(idx, 1);
+function changeCartQty(index, delta) {
+  if (!cart[index]) return;
+  cart[index].quantity += delta;
+  if (cart[index].quantity <= 0) {
+    cart.splice(index, 1);
   }
   renderCart();
 }
@@ -425,42 +533,44 @@ function calculateCartTotals() {
 function renderCart() {
   const listEl = document.getElementById('cart-items-list');
   const badgeEl = document.getElementById('cart-count-badge');
+  const dockCountEl = document.getElementById('dock-cart-count');
+  const headerTotalEl = document.getElementById('header-cart-total');
   const breakdownEl = document.getElementById('totals-breakdown');
   const upsellBox = document.getElementById('ai-upsell-box');
 
   const { subtotal, discount, shipping, finalTotal, totalItems } = calculateCartTotals();
   badgeEl.textContent = totalItems;
+  if (dockCountEl) dockCountEl.textContent = totalItems;
+  if (headerTotalEl) headerTotalEl.textContent = `$${finalTotal.toLocaleString('es-AR')}`;
 
   if (cart.length === 0) {
     listEl.innerHTML = `
-      <div class="text-muted" style="text-align:center; padding: 26px 12px;">
-        🛒 Tu pedido está vacío.<br/>
-        <small>Podés sumar productos desde la carta o pedirle a <strong>BrasaIA</strong> que te arme el pedido completo.</small>
+      <div style="text-align:center; padding: 20px 10px; color: var(--ink-muted); font-size:0.82rem;">
+        Todavía no sumaste platos a la comanda.<br/>
+        Elegí de la carta o pedile a <strong>Don Vito IA</strong> que te arme el pedido.
       </div>
     `;
     upsellBox.classList.add('hidden');
   } else {
     listEl.innerHTML = cart
-      .map((entry) => {
+      .map((entry, idx) => {
         const prod = catalog.find((p) => p.id === entry.id);
         if (!prod) return '';
         return `
           <div class="cart-item-row">
             <div class="cart-item-info">
-              <strong>${prod.emoji} ${prod.name}</strong>
-              <small>$${prod.price.toLocaleString('es-AR')} c/u • Subtotal: $${(prod.price * entry.quantity).toLocaleString('es-AR')}</small>
+              <strong>${entry.quantity}x ${prod.name}</strong>
+              <small>$${(prod.price * entry.quantity).toLocaleString('es-AR')} ${entry.notes ? `• (${entry.notes})` : ''}</small>
             </div>
             <div class="cart-qty-controls">
-              <button class="qty-btn" onclick="changeCartQty('${prod.id}', -1)">−</button>
-              <span>${entry.quantity}</span>
-              <button class="qty-btn" onclick="changeCartQty('${prod.id}', 1)">+</button>
+              <button class="qty-btn" onclick="changeCartQty(${idx}, -1)">−</button>
+              <button class="qty-btn" onclick="changeCartQty(${idx}, 1)">+</button>
             </div>
           </div>
         `;
       })
       .join('');
 
-    // Upselling inteligente automático según lo que hay en el carrito
     const hasPizza = cart.some((c) => c.id.startsWith('p'));
     const hasFaina = cart.some((c) => c.id === 'b3');
     const hasDrink = cart.some((c) => c.id.startsWith('d'));
@@ -468,14 +578,14 @@ function renderCart() {
     if (hasPizza && !hasFaina && catalog.find((p) => p.id === 'b3')?.inStock) {
       upsellBox.classList.remove('hidden');
       upsellBox.innerHTML = `
-        <div>✨ <strong>Sugerencia IA:</strong> ¿Sumamos una porción de <em>Fainá Clásico al Horno</em> para acompañar tu pizza por $2.400?</div>
-        <button class="btn-add-prod" onclick="addToCart('b3', 1)">+ Sumar</button>
+        <div>✨ <strong>Sugerencia del Horno:</strong> ¿Marchamos una porción de <em>Fainá al Molde de Cobre</em> por $2.400?</div>
+        <button class="btn-add-dish" onclick="addToCart('b3', 1, 'A caballo')">+ Sumar</button>
       `;
-    } else if (!hasDrink && catalog.find((p) => p.id === 'd2')?.inStock) {
+    } else if (!hasDrink && catalog.find((p) => p.id === 'd3')?.inStock) {
       upsellBox.classList.remove('hidden');
       upsellBox.innerHTML = `
-        <div>✨ <strong>Sugerencia IA:</strong> ¿Le agregamos una <em>Limonada Casera de 1L</em> bien fría por $4.500?</div>
-        <button class="btn-add-prod" onclick="addToCart('d2', 1)">+ Sumar</button>
+        <div>✨ <strong>Maridaje Cantina:</strong> ¿Agregamos un <em>Vermut Rosso de la Casa</em> bien frío por $5.400?</div>
+        <button class="btn-add-dish" onclick="addToCart('d3', 1, '')">+ Sumar</button>
       `;
     } else {
       upsellBox.classList.add('hidden');
@@ -484,29 +594,161 @@ function renderCart() {
 
   breakdownEl.innerHTML = `
     <div class="total-line">
-      <span>Subtotal productos (${totalItems})</span>
+      <span>SUBTOTAL (${totalItems} ítems)</span>
       <span>$${subtotal.toLocaleString('es-AR')}</span>
     </div>
     ${
       deliveryType === 'takeaway'
-        ? `<div class="total-line" style="color: #6ee7b7;">
-            <span>Descuento Retiro en Local (10% OFF)</span>
+        ? `<div class="total-line" style="color: var(--green-ok);">
+            <span>BONIF. RETIRO MOSTRADOR (10%)</span>
             <span>-$${discount.toLocaleString('es-AR')}</span>
           </div>`
         : `<div class="total-line">
-            <span>Envío a domicilio ${subtotal >= BUSINESS_INFO.freeDeliveryMin ? '(¡Bonificado!)' : ''}</span>
-            <span>${shipping === 0 && subtotal > 0 ? 'GRATIS' : '$' + shipping.toLocaleString('es-AR')}</span>
+            <span>ENVÍO CADETERÍA ${subtotal >= BUSINESS_INFO.freeDeliveryMin ? '(BONIFICADO)' : ''}</span>
+            <span>${shipping === 0 && subtotal > 0 ? '$0' : '$' + shipping.toLocaleString('es-AR')}</span>
           </div>`
     }
     <div class="total-line final">
-      <span>Total a Pagar</span>
+      <span>TOTAL COMANDA</span>
       <span>$${finalTotal.toLocaleString('es-AR')}</span>
     </div>
   `;
 }
 
 // ============================================================================
-// CONCIERGE CONVERSACIONAL IA (OPENAI API + MOTOR LOCAL RESILIENTE)
+// PLANO INTERACTIVO DE MESAS Y RESERVAS DEL SALÓN
+// ============================================================================
+function renderTablesFloorplan() {
+  const container = document.getElementById('floor-zones-grid');
+  const freeBadge = document.getElementById('tables-free-badge');
+  const pubResList = document.getElementById('public-reservations-list');
+
+  const freeCount = restaurantTables.filter((t) => t.status === 'free').length;
+  if (freeBadge) freeBadge.textContent = `${freeCount} libres`;
+
+  const zones = [...new Set(restaurantTables.map((t) => t.zone))];
+  container.innerHTML = zones
+    .map((zoneName) => {
+      const zoneTables = restaurantTables.filter((t) => t.zone === zoneName);
+      return `
+        <div class="zone-box">
+          <div class="zone-title">
+            <span>📍 ${zoneName}</span>
+            <small style="font-family:var(--font-mono); font-size:0.75rem;">${
+              zoneTables.filter((t) => t.status === 'free').length
+            } disponibles</small>
+          </div>
+          <div class="tables-grid-zone">
+            ${zoneTables
+              .map((t) => {
+                const isSelected = t.id === selectedTableId && t.status === 'free';
+                const cls = isSelected ? 'selected' : t.status;
+                return `
+                  <div class="table-node ${cls}" onclick="selectFloorTable('${t.id}')">
+                    <strong>MESA #${t.number}</strong>
+                    <small>${t.capacity} cubiertos</small>
+                    <div style="font-size:0.68rem; margin-top:3px; font-weight:700;">
+                      ${t.status === 'occupied' ? `🔒 ${t.guest}` : isSelected ? '✓ Seleccionada' : '🟢 Libre'}
+                    </div>
+                  </div>
+                `;
+              })
+              .join('')}
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  if (pubResList) {
+    pubResList.innerHTML = reservations
+      .slice(0, 4)
+      .map(
+        (r) => `
+        <div class="stock-row">
+          <div>
+            <strong>🪑 ${r.time} — ${r.name} (${r.people} pers.)</strong>
+            <div style="font-size:0.74rem; color:var(--ink-muted);">${r.area} • ${r.notes}</div>
+          </div>
+          <span class="order-source-badge">Confirmada</span>
+        </div>
+      `
+      )
+      .join('');
+  }
+}
+
+function selectFloorTable(tableId) {
+  const t = restaurantTables.find((x) => x.id === tableId);
+  if (!t || t.status === 'occupied') return;
+  selectedTableId = t.id;
+  const input = document.getElementById('res-table-selected');
+  if (input) {
+    input.value = `Mesa #${t.number} — ${t.zone} (Hasta ${t.capacity} pers.)`;
+  }
+  const peopleSelect = document.getElementById('res-people');
+  if (peopleSelect) peopleSelect.value = String(Math.min(t.capacity, 8));
+  renderTablesFloorplan();
+}
+
+function handleManualReservationSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('res-name').value.trim();
+  const people = Number(document.getElementById('res-people').value) || 4;
+  const time = document.getElementById('res-time').value;
+  const notes = document.getElementById('res-notes').value.trim() || 'Reserva desde Plano Interactivo Web';
+
+  const tableObj = restaurantTables.find((t) => t.id === selectedTableId && t.status === 'free') ||
+                   restaurantTables.find((t) => t.status === 'free');
+
+  registerNewReservation({
+    name,
+    people,
+    time,
+    area: tableObj ? `${tableObj.zone} (Mesa #${tableObj.number})` : 'Salón Principal',
+    notes,
+    tableId: tableObj ? tableObj.id : null
+  });
+
+  document.getElementById('res-name').value = '';
+  document.getElementById('res-notes').value = '';
+  alert(`¡Mesa confirmada para ${name} hoy a las ${time}! Ya quedó bloqueada en el plano del local.`);
+}
+
+function registerNewReservation(resObj) {
+  let targetTable = null;
+  if (resObj.tableId) {
+    targetTable = restaurantTables.find((t) => t.id === resObj.tableId && t.status === 'free');
+  }
+  if (!targetTable) {
+    targetTable = restaurantTables.find((t) => t.status === 'free' && t.capacity >= (Number(resObj.people) || 2)) ||
+                  restaurantTables.find((t) => t.status === 'free');
+  }
+
+  if (targetTable) {
+    targetTable.status = 'occupied';
+    targetTable.guest = `${resObj.name || 'Reserva IA'} (${resObj.time || '21:30'})`;
+    const nextFree = restaurantTables.find((t) => t.status === 'free');
+    if (nextFree) selectedTableId = nextFree.id;
+  }
+
+  const newRes = {
+    id: `RES-${203 + reservations.length}`,
+    tableId: targetTable ? targetTable.id : 'T1',
+    name: resObj.name || 'Cliente Web IA',
+    people: Number(resObj.people) || 4,
+    time: resObj.time || '21:30 hs',
+    area: targetTable ? `${targetTable.zone} (Mesa #${targetTable.number})` : resObj.area || 'Patio de Parra',
+    notes: resObj.notes || 'Asignada automáticamente por Don Vito IA'
+  };
+
+  reservations.unshift(newRes);
+  renderTablesFloorplan();
+  renderAdminDashboard();
+}
+
+// ============================================================================
+// CONSERJE IA ("DON VITO") + CONEXIÓN OPENAI
 // ============================================================================
 function initWelcomeChat() {
   chatHistory = [];
@@ -514,12 +756,11 @@ function initWelcomeChat() {
   box.innerHTML = '';
   appendAssistantMessage({
     reply:
-      '¡Hola! 👋 Soy **BrasaIA**, el asistente inteligente de **Don Brasa (Av. Pellegrini 1540)**.\n\n' +
-      'Puedo ayudarte al instante sin esperas de WhatsApp:\n' +
-      '• 🍕 **Armar combos** según cuántos son, presupuesto o si hay vegetarianos/celíacos.\n' +
-      '• 🛒 **Tomar tu pedido directo** en lenguaje natural y cargarlo al carrito.\n' +
-      '• 📅 **Reservar una mesa** en el salón o patio cervecero.\n\n' +
-      '¿Qué te gustaría comer o consultar hoy?'
+      '¡Buenas noches! Soy **Don Vito**, el conserje digital de **La Cantina de Don Brasa**.\n\n' +
+      'Estoy conectado en vivo con el horno de barro y el plano del salón:\n' +
+      '• 🍕 Decime **cuántos son y qué presupuesto tienen** para armarte la mesa ideal.\n' +
+      '• 🛵 Dictame tu pedido con dirección y te lo cargo directo en la comanda.\n' +
+      '• 🪑 Pedime **mesa en el Patio o Salón** y te la reservo en el plano al instante.'
   });
 }
 
@@ -541,55 +782,49 @@ function appendUserMessage(text) {
   box.scrollTop = box.scrollHeight;
 }
 
-function appendAssistantMessage(aiData, providerLabel = 'BrasaIA') {
+function appendAssistantMessage(aiData, providerLabel = 'Don Vito • Conserje IA') {
   const box = document.getElementById('chat-messages');
   const div = document.createElement('div');
   div.className = 'msg-bubble assistant';
 
   let innerHtml = `
-    <div class="msg-header">
-      <span>🤖 ${providerLabel}</span>
-    </div>
+    <div class="msg-header">${providerLabel}</div>
     <div>${formatMarkdownText(aiData.reply)}</div>
   `;
 
-  // Si la IA agregó productos automáticamente al carrito
   if (Array.isArray(aiData.autoCartAdd) && aiData.autoCartAdd.length > 0) {
     const addedNames = [];
     aiData.autoCartAdd.forEach((item) => {
       const prod = catalog.find((p) => p.id === item.id);
       if (prod && prod.inStock) {
-        addToCart(prod.id, Number(item.quantity) || 1);
+        addToCart(prod.id, Number(item.quantity) || 1, '');
         addedNames.push(`${item.quantity || 1}x ${prod.name}`);
       }
     });
     if (addedNames.length > 0) {
       innerHtml += `
         <div class="auto-added-pill">
-          ✅ Cargado en tu carrito: ${addedNames.join(', ')}
+          ✅ Marchado a tu comanda: ${addedNames.join(', ')}
         </div>
       `;
     }
   }
 
-  // Si la IA completó datos del cliente (nombre, dirección, pago, modalidad)
   if (aiData.extractedOrder) {
     applyExtractedCustomerData(aiData.extractedOrder);
   }
 
-  // Si la IA detectó una reserva de mesa
   if (aiData.reservation && aiData.reservation.detected) {
     registerNewReservation(aiData.reservation);
     innerHtml += `
       <div class="auto-added-pill">
-        📅 Reserva registrada en vivo: ${aiData.reservation.people || 2} personas a las ${
+        🪑 Mesa reservada en el plano: ${aiData.reservation.people || 4} cubiertos hoy a las ${
       aiData.reservation.time || '21:30'
-    } hs (${aiData.reservation.area || 'Salón'})
+    } hs
       </div>
     `;
   }
 
-  // Si la IA propuso un combo sugerido para agregar con 1 clic
   if (Array.isArray(aiData.suggestedItems) && aiData.suggestedItems.length > 0) {
     const validItems = aiData.suggestedItems
       .map((s) => {
@@ -607,8 +842,8 @@ function appendAssistantMessage(aiData, providerLabel = 'BrasaIA') {
         .map(
           (v) => `
           <div class="ai-combo-item">
-            <span>${v.quantity}x ${v.emoji} ${v.name}</span>
-            <strong>$${(v.price * v.quantity).toLocaleString('es-AR')}</strong>
+            <span><strong>${v.quantity}x</strong> ${v.name}</span>
+            <strong style="font-family:var(--font-mono);">$${(v.price * v.quantity).toLocaleString('es-AR')}</strong>
           </div>
         `
         )
@@ -616,10 +851,10 @@ function appendAssistantMessage(aiData, providerLabel = 'BrasaIA') {
 
       innerHtml += `
         <div class="ai-combo-card">
-          <h4>✨ Propuesta Armado Inteligente (Total: $${comboTotal.toLocaleString('es-AR')})</h4>
+          <h4>🍽️ Sugerencia del Mozo (Total: $${comboTotal.toLocaleString('es-AR')})</h4>
           ${rowsHtml}
           <button class="btn-apply-combo" onclick="applySuggestedCombo('${comboId}')">
-            🛒 Agregar todo este combo al carrito ($${comboTotal.toLocaleString('es-AR')})
+            + Cargar toda esta selección a mi Comanda ($${comboTotal.toLocaleString('es-AR')})
           </button>
         </div>
       `;
@@ -634,18 +869,14 @@ function appendAssistantMessage(aiData, providerLabel = 'BrasaIA') {
 function applySuggestedCombo(comboId) {
   const items = suggestedCombosStore[comboId];
   if (!items) return;
-  items.forEach((it) => addToCart(it.id, it.quantity));
-  switchRightPanel('cart');
+  items.forEach((it) => addToCart(it.id, it.quantity, 'Combo sugerido IA'));
+  switchRightTab('cart');
 }
 
 function applyExtractedCustomerData(ext) {
   if (!ext) return;
-  if (ext.customerName) {
-    document.getElementById('cust-name').value = ext.customerName;
-  }
-  if (ext.address) {
-    document.getElementById('cust-address').value = ext.address;
-  }
+  if (ext.customerName) document.getElementById('cust-name').value = ext.customerName;
+  if (ext.address) document.getElementById('cust-address').value = ext.address;
   if (ext.paymentMethod) {
     const sel = document.getElementById('cust-payment');
     const norm = ext.paymentMethod.toLowerCase();
@@ -657,26 +888,12 @@ function applyExtractedCustomerData(ext) {
   if (ext.deliveryType === 'takeaway' || ext.deliveryType === 'delivery') {
     setDeliveryType(ext.deliveryType);
   }
-  if (ext.notes) {
-    document.getElementById('cust-notes').value = ext.notes;
-  }
-}
-
-function registerNewReservation(resObj) {
-  const newRes = {
-    id: `RES-${203 + reservations.length}`,
-    name: resObj.name || 'Cliente Web IA',
-    people: Number(resObj.people) || 4,
-    time: resObj.time || '21:30 hs',
-    area: resObj.area || 'Patio Cervecero',
-    notes: resObj.notes || 'Confirmada automáticamente por BrasaIA'
-  };
-  reservations.unshift(newRes);
-  renderAdminDashboard();
+  if (ext.notes) document.getElementById('cust-notes').value = ext.notes;
 }
 
 function triggerQuickPrompt(promptText) {
-  switchRightPanel('chat');
+  navigateApp('menu');
+  switchRightTab('chat');
   const input = document.getElementById('chat-input');
   input.value = promptText;
   sendChatMessage(promptText);
@@ -701,7 +918,7 @@ async function sendChatMessage(userText, mode = 'chat') {
   const box = document.getElementById('chat-messages');
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'msg-bubble assistant';
-  loadingDiv.innerHTML = `<div class="msg-header">🤖 BrasaIA</div><div>⏳ <em>Analizando carta en vivo y procesando tu solicitud...</em></div>`;
+  loadingDiv.innerHTML = `<div class="msg-header">Don Vito • Conserje IA</div><div>🔥 <em>Consultando stock en cocina y armando respuesta...</em></div>`;
   if (mode === 'chat') {
     box.appendChild(loadingDiv);
     box.scrollTop = box.scrollHeight;
@@ -711,7 +928,7 @@ async function sendChatMessage(userText, mode = 'chat') {
   const selectedModel = sessionStorage.getItem('OPENAI_MODEL') || 'gpt-4o-mini';
 
   let aiResult = null;
-  let usedProvider = 'BrasaIA • OpenAI GPT';
+  let usedProvider = 'Don Vito • OpenAI GPT';
 
   try {
     const resp = await fetch('/api/chat', {
@@ -730,30 +947,28 @@ async function sendChatMessage(userText, mode = 'chat') {
       const json = await resp.json();
       if (json.ok && json.data) {
         aiResult = json.data;
-        usedProvider = `BrasaIA • OpenAI (${json.model || selectedModel})`;
+        usedProvider = `Don Vito • OpenAI (${json.model || selectedModel})`;
       }
     }
   } catch {
-    // Si está en un servidor puramente estático sin backend Node/Vercel y el usuario cargó una API Key en el navegador:
+    // Fallback si no hay backend activo
   }
 
-  // Intento directo a OpenAI si hay API Key en sesión y el backend es estático
   if (!aiResult && clientApiKey && clientApiKey.startsWith('sk-')) {
     try {
       const directResp = await callOpenAiDirectlyFromBrowser(chatHistory, clientApiKey, selectedModel, mode);
       if (directResp) {
         aiResult = directResp;
-        usedProvider = `BrasaIA • OpenAI (${selectedModel})`;
+        usedProvider = `Don Vito • OpenAI (${selectedModel})`;
       }
     } catch {
       // Fallback al motor local
     }
   }
 
-  // Motor Inteligente Local de Respaldo (100% funcional incluso sin internet o antes de cargar la API Key)
   if (!aiResult) {
     aiResult = localSmartEngine(userText, mode);
-    usedProvider = 'BrasaIA • Motor Inteligente Integrado';
+    usedProvider = 'Don Vito • Conserje IA';
   }
 
   if (mode === 'chat' && loadingDiv.parentNode) {
@@ -769,7 +984,6 @@ async function sendChatMessage(userText, mode = 'chat') {
   return aiResult;
 }
 
-// Llamada directa desde el navegador en caso de hosting estático + API Key ingresada en el modal
 async function callOpenAiDirectlyFromBrowser(messages, apiKey, model, mode) {
   const catalogSummary = catalog
     .map(
@@ -778,7 +992,7 @@ async function callOpenAiDirectlyFromBrowser(messages, apiKey, model, mode) {
     )
     .join('\n');
 
-  const sys = `Eres BrasaIA de Don Brasa (Rosario). Catálogo:\n${catalogSummary}\nResponde SIEMPRE en JSON con claves: reply (string), suggestedItems (array de {id, quantity}), autoCartAdd (array de {id, quantity}), extractedOrder ({customerName, address, paymentMethod, deliveryType, notes}), reservation ({detected, name, people, time, area, notes}). Modo: ${mode}.`;
+  const sys = `Eres Don Vito, el mozo y conserje experto de La Cantina de Don Brasa (Rosario). Catálogo:\n${catalogSummary}\nResponde SIEMPRE en JSON con claves: reply (string), suggestedItems (array de {id, quantity}), autoCartAdd (array de {id, quantity}), extractedOrder ({customerName, address, paymentMethod, deliveryType, notes}), reservation ({detected, name, people, time, area, notes}). Modo: ${mode}.`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -799,9 +1013,9 @@ async function callOpenAiDirectlyFromBrowser(messages, apiKey, model, mode) {
 }
 
 // ============================================================================
-// MOTOR NLU LOCAL DE RESPALDO (GARANTIZA 0 FALLOS EN LA DEMO ANTE EL JURADO)
+// MOTOR NLU LOCAL RESILIENTE
 // ============================================================================
-function localSmartEngine(rawText, mode = 'chat') {
+function localSmartEngine(rawText) {
   const text = rawText.toLowerCase();
   const result = {
     reply: '',
@@ -811,15 +1025,15 @@ function localSmartEngine(rawText, mode = 'chat') {
     reservation: { detected: false }
   };
 
-  // 1. Detectar datos de cliente / dirección / pago en el texto
+  // Extraer dirección, nombre, modalidad y pago
   const addressMatch = rawText.match(
-    /(?:a\s+|en\s+|direcci[oó]n[:\s]+)?((?:bv\.?\s*oro[ñn]o|pellegrini|rioja|cordoba|c[oó]rdoba|santa\s+fe|san\s+mart[ií]n|mitre|sarmiento|entre\s+r[ií]os|corrientes|9\s+de\s+julio|3\s+de\s+febrero|mendoza|san\s+juan|urquiza|italia|espa[ñn]a|dorrego|moreno|balcarce|alear|v[eé]lez\s+sarsfield|ov\.?\s*lagos|francia|callao|pichincha)\s+\d{2,5}(?:\s*piso\s*\w+)?(?:\s*dto\s*\w+|\s*[a-z])?)/i
+    /(?:a\s+|en\s+|direcci[oó]n[:\s]+)?((?:bv\.?\s*oro[ñn]o|pellegrini|rioja|cordoba|c[oó]rdoba|santa\s+fe|san\s+mart[ií]n|mitre|sarmiento|entre\s+r[ií]os|corrientes|9\s+de\s+julio|3\s+de\s+febrero|mendoza|san\s+juan|urquiza|italia|espa[ñn]a|dorrego|moreno|balcarce|ov\.?\s*lagos|francia|callao|pichincha)\s+\d{2,5}(?:\s*piso\s*\w+)?(?:\s*dto\s*\w+|\s*[a-z])?)/i
   );
   if (addressMatch) {
     result.extractedOrder.address = addressMatch[1].trim();
     result.extractedOrder.deliveryType = 'delivery';
   }
-  if (text.includes('retiro') || text.includes('passo a buscar') || text.includes('paso a buscar') || text.includes('take away')) {
+  if (text.includes('retiro') || text.includes('mostrador') || text.includes('paso a buscar') || text.includes('take away')) {
     result.extractedOrder.deliveryType = 'takeaway';
   }
   const nameMatch = rawText.match(/(?:a\s+nombre\s+de|soy|me\s+llamo)\s+([A-ZÁÉÍÓÚÑa-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?)/i);
@@ -830,12 +1044,12 @@ function localSmartEngine(rawText, mode = 'chat') {
   else if (text.includes('efectivo')) result.extractedOrder.paymentMethod = 'Efectivo';
   else if (text.includes('mercado pago') || text.includes('mercadopago')) result.extractedOrder.paymentMethod = 'Mercado Pago';
 
-  // 2. Detectar si es una RESERVA de mesa
-  if (text.includes('reserv') || (text.includes('mesa') && (text.includes('personas') || text.includes('hs') || text.includes('21') || text.includes('22')))) {
-    const peopleMatch = text.match(/(\d+)\s*(?:personas|amigos|comensales)/);
+  // Reserva de mesa
+  if (text.includes('reserv') || (text.includes('mesa') && (text.includes('personas') || text.includes('patio') || text.includes('21') || text.includes('22')))) {
+    const peopleMatch = text.match(/(\d+)\s*(?:personas|amigos|cubiertos)/);
     const timeMatch = text.match(/(\d{1,2}(?::\d{2})?)\s*(?:hs|horas)?/);
-    const area = text.includes('patio') ? 'Patio Cervecero' : 'Salón Interior';
-    const rName = result.extractedOrder.customerName || 'Cliente Web';
+    const area = text.includes('patio') ? 'Patio de Parra & Guirnaldas' : 'Salón Histórico (Pellegrini)';
+    const rName = result.extractedOrder.customerName || 'Cliente Cantina';
     const people = peopleMatch ? Number(peopleMatch[1]) : 4;
     const time = timeMatch ? (timeMatch[1].includes(':') ? timeMatch[1] : `${timeMatch[1]}:00`) : '21:30';
 
@@ -845,27 +1059,27 @@ function localSmartEngine(rawText, mode = 'chat') {
       people,
       time,
       area,
-      notes: 'Reserva confirmada automáticamente por BrasaIA'
+      notes: 'Confirmada por Don Vito IA en plano de salón'
     };
     result.reply =
-      `¡Excelente, **${rName}**! 📅 Ya dejé confirmada tu reserva en nuestro sistema en vivo:\n\n` +
-      `• **Comensales:** ${people} personas\n` +
-      `• **Horario:** Hoy a las ${time} hs\n` +
+      `¡Hecho, **${rName}**! 🪑 Ya te asigné y bloqueé una mesa libre en el plano para hoy:\n\n` +
+      `• **Comensales:** ${people} cubiertos\n` +
+      `• **Turno:** ${time} hs\n` +
       `• **Sector:** ${area}\n\n` +
-      `Te esperamos en **Av. Pellegrini 1540**. Podés ver tu reserva reflejada ahora mismo en el **Panel del Negocio**.`;
+      `Podés ver tu mesa marcada como ocupada ahora mismo en la pestaña **🪑 Salón & Mesas**.`;
     return result;
   }
 
-  // 3. Detectar armado de COMBO por presupuesto o grupo de amigos
+  // Armado de combo por presupuesto / grupo
   if (
     text.includes('presupuesto') ||
     text.includes('gastar') ||
     text.includes('combo') ||
-    text.includes('recomend') ||
+    text.includes('arm') ||
     (text.includes('somos') && (text.includes('amigos') || text.includes('personas')))
   ) {
     const budgetMatch = rawText.replace(/\./g, '').match(/\$?\s*(\d{4,6})/);
-    const budget = budgetMatch ? Number(budgetMatch[1]) : 34000;
+    const budget = budgetMatch ? Number(budgetMatch[1]) : 35000;
     const hasVeggie = text.includes('veggie') || text.includes('vegetarian');
     const hasCeliac = text.includes('celiac') || text.includes('celíac') || text.includes('sin tacc');
 
@@ -880,9 +1094,7 @@ function localSmartEngine(rawText, mode = 'chat') {
       }
     };
 
-    if (hasCeliac) {
-      tryAdd('p5', 1);
-    }
+    if (hasCeliac) tryAdd('p5', 1);
     if (hasVeggie) {
       tryAdd('p2', 1) || tryAdd('p1', 1);
       tryAdd('e3', 2);
@@ -899,21 +1111,19 @@ function localSmartEngine(rawText, mode = 'chat') {
     const listStr = combo.map((c) => `• **${c.quantity}x ${c.name}** ($${(c.price * c.quantity).toLocaleString('es-AR')})`).join('\n');
 
     result.reply =
-      `¡Armé la combinación ideal respetando tu tope de **$${budget.toLocaleString('es-AR')}** y solo con platos en stock en cocina! 🔥\n\n` +
+      `Para cuidar tu presupuesto de **$${budget.toLocaleString('es-AR')}**, armé esta mesa bien abundante con lo que está saliendo ahora del horno de barro:\n\n` +
       `${listStr}\n\n` +
-      `💰 **Total del Combo: $${runningTotal.toLocaleString('es-AR')}** ${
-        runningTotal >= BUSINESS_INFO.freeDeliveryMin ? '(¡Con envío GRATIS incluido!)' : `(Te sobran $${(budget - runningTotal).toLocaleString('es-AR')} de tu presupuesto)`
-      }.\n\n` +
-      `Hacé clic en el botón verde de acá abajo para sumarlo completo a tu pedido:`;
+      `💰 **Total: $${runningTotal.toLocaleString('es-AR')}** (Te sobran $${(budget - runningTotal).toLocaleString('es-AR')}).\n` +
+      `Tocá el botón terracota acá abajo para marchar todo junto a tu comanda:`;
     return result;
   }
 
-  // 4. Detectar productos específicos pedidos (tanto en chat como en pegado de WhatsApp)
+  // Detección de platos pedidos directamente
   const wordNums = { una: 1, un: 1, uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, media: 6, docena: 12 };
   const matcherRules = [
     { id: 'p5', regex: /(\d+|una|un|dos|tres)?\s*(?:pizzas?\s*)?(?:muzza(?:rella)?\s+)?sin\s+tacc/i },
     { id: 'p2', regex: /(\d+|una|un|dos|tres)?\s*(?:pizzas?\s*)?napolitanas?/i },
-    { id: 'p3', regex: /(\d+|una|un|dos|tres)?\s*(?:pizzas?\s*)?fugazzetas?/i },
+    { id: 'p3', regex: /(\d+|una|un|dos|tres)?\s*(?:pizzas?\s*)?fugazzetas?(?:\s+rellenas?)?/i },
     { id: 'p4', regex: /(\d+|una|un|dos|tres)?\s*(?:pizzas?\s*)?(?:r[uú]cula|crudo)/i },
     { id: 'p1', regex: /(\d+|una|un|dos|tres)?\s*(?:pizzas?\s*(?:de\s*)?)?muzza(?:rellas?)?/i },
     { id: 'e1', regex: /(\d+|una|un|dos|tres|cuatro|cinco|seis|media\s+docena|docena)?\s*(?:empanadas?\s*(?:de\s*)?)?carne(?:\s+cortada)?(?:\s+a\s+cuchillo)?/i },
@@ -925,7 +1135,7 @@ function localSmartEngine(rawText, mode = 'chat') {
     { id: 'b3', regex: /(\d+|una|un|dos)?\s*fain[aá]/i },
     { id: 'd1', regex: /(\d+|una|un|dos)?\s*(?:coca(?:\s*cola)?|gaseosas?)/i },
     { id: 'd2', regex: /(\d+|una|un|dos)?\s*limonadas?/i },
-    { id: 'd3', regex: /(\d+|una|un|dos)?\s*(?:cervezas?|patagonia|birras?)/i },
+    { id: 'd3', regex: /(\d+|una|un|dos)?\s*(?:vermut|verm[uú]th)/i },
     { id: 'd4', regex: /(\d+|una|un|dos)?\s*flan(?:es)?/i }
   ];
 
@@ -960,34 +1170,29 @@ function localSmartEngine(rawText, mode = 'chat') {
           return `• **${it.quantity}x ${p.name}** ($${(p.price * it.quantity).toLocaleString('es-AR')})`;
         })
         .join('\n');
-      msgParts.push(`¡Perfecto! Ya procesé tu pedido y lo sumé automáticamente al carrito:\n\n${summary}`);
+      msgParts.push(`¡Oído cocina! Ya anoté en tu comanda:\n\n${summary}`);
     }
 
     if (outOfStockRequested.length > 0) {
       const names = outOfStockRequested.map((p) => `**${p.name}**`).join(', ');
       const alt = catalog.find((p) => p.inStock && p.category === outOfStockRequested[0].category);
       msgParts.push(
-        `⚠️ **Aviso de stock en vivo:** En este momento se acaba de agotar ${names} en cocina. ${
-          alt ? `Te sugiero reemplazarlo por **${alt.name}** ($${alt.price.toLocaleString('es-AR')}) que está disponible recién salido.` : ''
+        `⚠️ **Aviso de la Cocina en Vivo:** Recién se nos terminó la última tanda de ${names}. ${
+          alt ? `Te recomiendo reemplazarla por **${alt.name}** ($${alt.price.toLocaleString('es-AR')}) que está saliendo ahora mismo.` : ''
         }`
       );
-      if (alt) {
-        result.suggestedItems.push({ id: alt.id, quantity: 1 });
-      }
+      if (alt) result.suggestedItems.push({ id: alt.id, quantity: 1 });
     }
 
     if (result.extractedOrder.address) {
-      msgParts.push(`📍 **Dirección detectada:** ${result.extractedOrder.address}`);
+      msgParts.push(`📍 **Dirección anotada:** ${result.extractedOrder.address}`);
     }
-    if (result.extractedOrder.paymentMethod) {
-      msgParts.push(`💳 **Medio de pago:** ${result.extractedOrder.paymentMethod}`);
-    }
-    msgParts.push(`Podés revisar y confirmar el envío a cocina en la pestaña **🛒 Mi Pedido**.`);
+    msgParts.push(`Revisá el ticket en la pestaña **🧾 Comanda** para marcharlo al horno.`);
     result.reply = msgParts.join('\n\n');
     return result;
   }
 
-  // 5. Consultas de Celíacos / Sin TACC / Veggie
+  // Consultas dietarias Sin TACC / Veggie
   if (text.includes('tacc') || text.includes('celiac') || text.includes('celíac') || text.includes('veggie') || text.includes('vegetarian')) {
     const sintacc = catalog.filter((p) => p.inStock && p.tags.includes('sintacc'));
     const veggie = catalog.filter((p) => p.inStock && p.tags.includes('veggie'));
@@ -996,50 +1201,44 @@ function localSmartEngine(rawText, mode = 'chat') {
       ...(veggie[2] ? [{ id: veggie[2].id, quantity: 2 }] : [])
     ];
     result.reply =
-      `¡Sí! Cuidamos muchísimo las opciones especiales y están todas identificadas en nuestra carta en vivo:\n\n` +
-      `🌾 **Opciones Sin TACC (Aptas Celíacos en sector aislado):**\n` +
+      `En **La Cantina de Don Brasa** tenemos sector aislado para celíacos y opciones vegetarianas al barro:\n\n` +
+      `🌾 **Opciones Sin TACC disponibles ahora:**\n` +
       sintacc.map((p) => `• **${p.name}** ($${p.price.toLocaleString('es-AR')})`).join('\n') +
-      `\n\n🌱 **Opciones Vegetarianas destacadas:**\n` +
+      `\n\n🌿 **Opciones Vegetarianas:**\n` +
       veggie.slice(0, 5).map((p) => `• **${p.name}** ($${p.price.toLocaleString('es-AR')})`).join('\n');
     return result;
   }
 
-  // 6. Consultas de envío, zonas, horarios y medios de pago
-  if (text.includes('envío') || text.includes('envio') || text.includes('pichincha') || text.includes('pago') || text.includes('horario') || text.includes('donde')) {
-    result.reply =
-      `📍 **Información de Entregas y Pagos en Don Brasa:**\n\n` +
-      `• **Dirección del local:** Av. Pellegrini 1540, Rosario (Abierto de 19:00 a 00:30 hs).\n` +
-      `• **Zonas de Delivery:** Centro, Macrocentro, Pichincha, Echesortu y Abasto.\n` +
-      `• **Costo de envío:** $1.800 (¡**GRATIS** en pedidos desde $35.000!). Demora estimada: 35-40 min.\n` +
-      `• **Take Away (Retiro en local):** Listo en 20 min con **10% de descuento** en efectivo.\n` +
-      `• **Medios de pago:** Transferencia (Alias: \`DONBRASA.ROSARIO\`), Mercado Pago, Efectivo y Tarjetas.`;
-    return result;
-  }
-
-  // Respuesta general con sugerencia de los más pedidos
+  // Respuesta general con sugerencia de la casa
   result.suggestedItems = [
-    { id: 'p1', quantity: 1 },
+    { id: 'p3', quantity: 1 },
     { id: 'e1', quantity: 4 },
-    { id: 'd2', quantity: 1 }
+    { id: 'd3', quantity: 1 }
   ];
   result.reply =
-    `¡Con gusto te ayudo! En **Don Brasa** podés decirme directamente qué tenés ganas de comer, cuántos son y cuánto quieren gastar, o pegar el pedido directo.\n\n` +
-    `Te dejo acá abajo nuestro **Combo Clásico Rosarino más pedido de la noche** por si querés sumarlo con un clic:`;
+    `¡Adelante! Podés pedirme que te arme un combo según tu presupuesto, dictarme tu pedido con dirección o reservar mesa en el patio.\n\n` +
+    `Te dejo acá abajo la **Selección Favorita de los Habitués de Pellegrini** por si querés marcharla con 1 clic:`;
   return result;
 }
 
 // ============================================================================
-// TRANSFORMADOR DE MENSAJE DE WHATSAPP A PEDIDO (SUB-PANEL 2)
+// INTERPRETADOR DE WHATSAPP & SIMULADOR DE AUDIO
 // ============================================================================
 const WA_SAMPLES = {
-  1: 'Hola buenas noches! Soy Martín Gómez, mandame por favor 1 pizza napolitana especial, 6 empanadas de carne cortada a cuchillo, 2 de jamon y queso y una coca de litro y medio a Bv. Oroño 840 Piso 3 B. Pago por transferencia. Gracias!',
-  2: 'Hola che te paso el pedido del audio: somos varios acá en Rioja 1850, mandanos 1 milanesa napolitana para compartir, 1 pizza de muzzarella clásica y 1 limonada de litro. A nombre de Lucía, pagamos con Mercado Pago.',
-  3: 'Buenas! Soy Federico, paso a retirar por el local en 20 minutos: preparame 1 pizza muzzarella sin TACC, 4 empanadas de humita y 1 porción de fainá. Pago en efectivo en el mostrador.'
+  1: 'Hola buenas noches! Soy Martín Gómez, mandame por favor 1 pizza napolitana al barro, 6 empanadas de carne cortada a cuchillo, 2 de jamon y queso y una coca de litro y medio a Bv. Oroño 840 Piso 3 B. Pago por transferencia.',
+  2: 'Hola maestro! Somos varios acá en Rioja 1850, mandanos 1 milanesa napolitana XXL de bodegón, 1 pizza de muzzarella al molde y 1 jarra de limonada. A nombre de Lucía, pagamos con Mercado Pago.',
+  3: 'Buenas! Soy Federico, paso a retirar por el mostrador en 20 minutos: preparame 1 pizza muzzarella sin TACC, 4 empanadas de humita y 1 porción de fainá. Pago en efectivo.'
 };
 
 function loadWhatsAppSample(num) {
-  const input = document.getElementById('wa-raw-input');
-  input.value = WA_SAMPLES[num] || '';
+  document.getElementById('wa-raw-input').value = WA_SAMPLES[num] || '';
+}
+
+function simulateVoiceTranscription() {
+  const voiceTranscript =
+    '🎙️ [Audio transcripto por IA]: "Hola chicos de Don Brasa, habla Ramiro! Mándenme a San Martín 1120 piso 4 B una fugazzeta rellena, cuatro empanadas de carne cortada a cuchillo y un vermut con soda. Les transfiero al alias ahora mismo, gracias!"';
+  document.getElementById('wa-raw-input').value = voiceTranscript;
+  processWhatsAppText();
 }
 
 async function processWhatsAppText() {
@@ -1049,118 +1248,178 @@ async function processWhatsAppText() {
 
   if (!raw) {
     resBox.classList.remove('hidden');
-    resBox.innerHTML = '⚠️ Pegá un mensaje o elegí uno de los ejemplos de arriba primero.';
+    resBox.innerHTML = '⚠️ Seleccioná un mensaje de prueba, el audio de arriba o pegá un texto primero.';
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = '⏳ Extrayendo productos, cantidades y dirección con IA...';
+  btn.textContent = '⏳ Interpretando audio/mensaje con IA...';
 
-  // Limpiamos carrito actual para cargar limpio el pedido de WhatsApp
   cart = [];
   const aiData = await sendChatMessage(raw, 'whatsapp_parser');
 
   if (Array.isArray(aiData.autoCartAdd)) {
-    aiData.autoCartAdd.forEach((item) => addToCart(item.id, Number(item.quantity) || 1));
+    aiData.autoCartAdd.forEach((item) => addToCart(item.id, Number(item.quantity) || 1, 'Desde WhatsApp IA'));
   }
   if (aiData.extractedOrder) {
     applyExtractedCustomerData(aiData.extractedOrder);
   }
 
   btn.disabled = false;
-  btn.textContent = '✨ Procesar con IA y Armar Pedido Automático';
+  btn.textContent = '⚡ Extraer Platos y Armar Comanda con IA';
 
   const { finalTotal, totalItems } = calculateCartTotals();
   resBox.classList.remove('hidden');
   resBox.innerHTML = `
-    <div style="margin-bottom:8px; color:#6ee7b7; font-weight:700;">
-      ✅ ¡Mensaje de WhatsApp transformado en comanda estructurada!
+    <div style="color:var(--green-ok); font-weight:800; margin-bottom:6px;">
+      ✅ ¡Mensaje convertido en Comanda Térmica sin errores!
     </div>
-    <div>• <strong>Productos detectados:</strong> ${totalItems} unidades cargadas al carrito</div>
-    <div>• <strong>Cliente:</strong> ${document.getElementById('cust-name').value || 'Detectado'}</div>
+    <div>• <strong>Platos detectados:</strong> ${totalItems} unidades</div>
+    <div>• <strong>Cliente:</strong> ${document.getElementById('cust-name').value || 'Ramiro'}</div>
     <div>• <strong>Entrega:</strong> ${
       deliveryType === 'takeaway'
-        ? 'Retiro en local (10% OFF)'
+        ? 'Retiro en mostrador (-10%)'
         : document.getElementById('cust-address').value || 'Envío a domicilio'
     }</div>
-    <div>• <strong>Total calculado:</strong> $${finalTotal.toLocaleString('es-AR')}</div>
-    <button class="btn-primary" style="margin-top:10px;" onclick="switchRightPanel('cart')">
-      🛒 Ir al Carrito Listo para Confirmar (${totalItems})
+    <div style="font-family:var(--font-mono); font-weight:700; margin-top:4px;">TOTAL: $${finalTotal.toLocaleString('es-AR')}</div>
+    <button class="btn-terracotta btn-block" style="margin-top:10px;" onclick="switchRightTab('cart')">
+      🧾 Ver Ticket Listo para Marchar (${totalItems})
     </button>
   `;
 }
 
 // ============================================================================
-// CONFIRMACIÓN DE PEDIDO Y SINCRONIZACIÓN CON EL TABLERO KANBAN DE COCINA
+// MARCHAR PEDIDO A COCINA Y SEGUIMIENTO EN VIVO (TRACKER)
 // ============================================================================
 function submitFinalOrder() {
   if (cart.length === 0) {
-    alert('Agregá al menos un producto al pedido antes de confirmar.');
+    alert('Sumá al menos un plato a la comanda antes de marchar a cocina.');
     return;
   }
 
   const name = document.getElementById('cust-name').value.trim() || 'Cliente Web';
   const address =
     deliveryType === 'takeaway'
-      ? 'Retiro por el local (Av. Pellegrini 1540)'
+      ? 'Retiro en mostrador (Av. Pellegrini 1540)'
       : document.getElementById('cust-address').value.trim() || 'Centro, Rosario';
   const payment = document.getElementById('cust-payment').value;
+  const generalNotes = document.getElementById('cust-notes').value.trim();
   const { finalTotal } = calculateCartTotals();
 
   const orderItems = cart
     .map((entry) => {
       const p = catalog.find((x) => x.id === entry.id);
-      return p ? { name: p.name, quantity: entry.quantity, price: p.price } : null;
+      return p
+        ? {
+            name: p.name,
+            quantity: entry.quantity,
+            price: p.price,
+            notes: entry.notes || generalNotes || ''
+          }
+        : null;
     })
     .filter(Boolean);
 
+  const nowStr = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs';
   const newOrder = {
     id: `DB-${1042 + orders.length}`,
     customerName: name,
     address,
     deliveryType,
     paymentMethod: payment,
-    source: '🤖 BrasaIA (Web Directo)',
+    source: '🧾 Web + Conserje IA',
     status: 'new',
-    time: 'Recién ingresado',
+    time: nowStr,
     total: finalTotal,
     items: orderItems
   };
 
   orders.unshift(newOrder);
+  activeOrderId = newOrder.id;
   cart = [];
   renderCart();
   renderAdminDashboard();
 
-  const ticketEl = document.getElementById('order-ticket-content');
-  ticketEl.innerHTML = `
-    <div><strong>Comanda N°:</strong> #${newOrder.id}</div>
-    <div><strong>Cliente:</strong> ${newOrder.customerName}</div>
-    <div><strong>Entrega:</strong> ${newOrder.address}</div>
-    <div><strong>Pago:</strong> ${newOrder.paymentMethod}</div>
-    <hr style="border:none; border-top:1px dashed #334155; margin:8px 0;" />
-    ${newOrder.items.map((i) => `<div>• ${i.quantity}x ${i.name}</div>`).join('')}
-    <hr style="border:none; border-top:1px dashed #334155; margin:8px 0;" />
-    <div style="font-size:1rem; font-weight:800; color:#fbbf24;">TOTAL: $${newOrder.total.toLocaleString('es-AR')}</div>
+  const pill = document.getElementById('active-order-pill');
+  if (pill) {
+    pill.classList.remove('hidden');
+    pill.textContent = `#${newOrder.id}`;
+  }
+
+  navigateApp('tracker');
+}
+
+function renderOrderTracker() {
+  const wrap = document.getElementById('tracker-wrapper');
+  if (!wrap) return;
+
+  const currentOrd = orders.find((o) => o.id === activeOrderId) || orders[0];
+  if (!currentOrd) {
+    wrap.innerHTML = `<p>No hay comandas activas en este momento.</p>`;
+    return;
+  }
+
+  const step1Class = currentOrd.status === 'new' ? 'current' : 'done';
+  const step2Class = currentOrd.status === 'cooking' ? 'current' : currentOrd.status === 'ready' ? 'done' : '';
+  const step3Class = currentOrd.status === 'ready' ? 'current done' : '';
+
+  wrap.innerHTML = `
+    <div class="tracker-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+          <span class="eyebrow-tag">SEGUIMIENTO DE COMANDA EN TIEMPO REAL</span>
+          <h2 style="font-family:var(--font-serif); color:var(--green-bodegon);">Comanda #${currentOrd.id} — ${currentOrd.customerName}</h2>
+          <p class="sub-copy">📍 ${currentOrd.address} • Ingresó a las ${currentOrd.time}</p>
+        </div>
+        <span class="order-source-badge" style="font-size:0.8rem; padding:6px 10px;">${currentOrd.source}</span>
+      </div>
+
+      <div class="tracker-steps">
+        <div class="t-step ${step1Class}">
+          <strong style="display:block; font-size:0.95rem;">1. Recibida por IA</strong>
+          <small class="sub-copy">Comanda validada y cobrada sin demoras</small>
+        </div>
+        <div class="t-step ${step2Class}">
+          <strong style="display:block; font-size:0.95rem;">2. En Horno de Barro (430°C)</strong>
+          <small class="sub-copy">Maestro pizzero preparando tu pedido</small>
+        </div>
+        <div class="t-step ${step3Class}">
+          <strong style="display:block; font-size:0.95rem;">3. En Camino / Lista</strong>
+          <small class="sub-copy">Despachada desde Av. Pellegrini 1540</small>
+        </div>
+      </div>
+
+      <div class="thermal-ticket" style="margin-bottom:18px;">
+        <div style="font-family:var(--font-mono); font-size:0.84rem;">
+          ${currentOrd.items
+            .map(
+              (i) =>
+                `<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dotted #ccc;">
+                  <span>${i.quantity}x ${i.name} ${i.notes ? `(${i.notes})` : ''}</span>
+                </div>`
+            )
+            .join('')}
+          <div style="display:flex; justify-content:space-between; padding-top:8px; font-weight:700; color:var(--terracotta);">
+            <span>TOTAL PAGADO (${currentOrd.paymentMethod})</span>
+            <span>$${currentOrd.total.toLocaleString('es-AR')}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <span class="sub-copy" style="font-size:0.82rem;">💡 Podés cambiar el estado de esta comanda desde la vista <strong>👨‍🍳 Comandera Cocina</strong> y ver cómo se actualiza en vivo.</span>
+        <button class="btn-outline-dark" onclick="navigateApp('admin')">
+          👨‍🍳 Ir a Comandera de Cocina →
+        </button>
+      </div>
+    </div>
   `;
-
-  document.getElementById('order-modal').classList.remove('hidden');
-}
-
-function closeOrderModal() {
-  document.getElementById('order-modal').classList.add('hidden');
-}
-
-function closeOrderModalAndGoAdmin() {
-  closeOrderModal();
-  switchMainView('admin');
 }
 
 // ============================================================================
-// PANEL DEL COMERCIO (KANBAN EN VIVO, CONTROL DE STOCK Y RESERVAS)
+// COMANDERA DE COCINA POS & GESTIÓN DE STOCK EN VIVO
 // ============================================================================
 function renderAdminDashboard() {
-  // Actualizar badge superior y KPIs
   document.getElementById('admin-orders-badge').textContent = orders.length;
   document.getElementById('kpi-orders-count').textContent = orders.length;
 
@@ -1173,7 +1432,6 @@ function renderAdminDashboard() {
   document.getElementById('kpi-time-saved').textContent = hrs > 0 ? `${hrs}h ${remMins}m` : `${remMins} min`;
   document.getElementById('kpi-reservations-count').textContent = reservations.length;
 
-  // Renderizar columnas Kanban
   const cols = { new: [], cooking: [], ready: [] };
   orders.forEach((o) => {
     if (cols[o.status]) cols[o.status].push(o);
@@ -1185,8 +1443,8 @@ function renderAdminDashboard() {
 
   const renderOrderCard = (o) => {
     let nextLabel = '';
-    if (o.status === 'new') nextLabel = '🔥 Pasar a Cocina / Horno →';
-    else if (o.status === 'cooking') nextLabel = '🛵 Marcar Listo / En Camino →';
+    if (o.status === 'new') nextLabel = '🔥 Meter al Horno de Barro →';
+    else if (o.status === 'cooking') nextLabel = '🛵 Despachar Cadete / Mostrador →';
 
     return `
       <div class="order-card">
@@ -1194,13 +1452,20 @@ function renderAdminDashboard() {
           <span class="order-id">#${o.id} • ${o.customerName}</span>
           <span class="order-source-badge">${o.source}</span>
         </div>
-        <div class="text-muted" style="font-size:0.76rem;">📍 ${o.address} (${o.time})</div>
+        <div style="font-size:0.75rem; color:var(--ink-muted);">📍 ${o.address} (${o.time})</div>
         <ul class="order-items-ul">
-          ${o.items.map((it) => `<li>• <strong>${it.quantity}x</strong> ${it.name}</li>`).join('')}
+          ${o.items
+            .map(
+              (it) =>
+                `<li>• <strong>${it.quantity}x</strong> ${it.name} ${
+                  it.notes ? `<em style="color:var(--terracotta);">[${it.notes}]</em>` : ''
+                }</li>`
+            )
+            .join('')}
         </ul>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span class="text-muted" style="font-size:0.75rem;">💳 ${o.paymentMethod}</span>
-          <strong style="color:#fbbf24;">$${o.total.toLocaleString('es-AR')}</strong>
+          <span style="font-size:0.74rem; color:var(--ink-muted);">💳 ${o.paymentMethod}</span>
+          <strong style="font-family:var(--font-mono); color:var(--green-bodegon);">$${o.total.toLocaleString('es-AR')}</strong>
         </div>
         ${
           nextLabel
@@ -1215,36 +1480,37 @@ function renderAdminDashboard() {
   document.getElementById('kanban-cooking').innerHTML = cols.cooking.map(renderOrderCard).join('');
   document.getElementById('kanban-ready').innerHTML = cols.ready.map(renderOrderCard).join('');
 
-  // Renderizar lista de control de stock en tiempo real
   const stockEl = document.getElementById('admin-stock-list');
   stockEl.innerHTML = catalog
     .map(
       (item) => `
       <div class="stock-row">
-        <div>
-          <strong>${item.emoji} ${item.name}</strong>
-          <small class="text-muted" style="margin-left:6px;">$${item.price.toLocaleString('es-AR')}</small>
+        <div class="stock-dish-cell">
+          <img src="${item.image}" alt="${item.name}" class="stock-thumb" loading="lazy" />
+          <div>
+            <strong>${item.name}</strong>
+            <div style="font-family:var(--font-mono); font-size:0.74rem; color:var(--ink-muted);">$${item.price.toLocaleString('es-AR')}</div>
+          </div>
         </div>
         <button
           class="btn-toggle-stock ${item.inStock ? 'in-stock' : 'out-stock'}"
           onclick="toggleProductStock('${item.id}')"
         >
-          ${item.inStock ? '✅ Disponible (Click para Agotar)' : '❌ AGOTADO (Click para Activar)'}
+          ${item.inStock ? '🟢 En Stock (Click p/ Agotar)' : '🔴 AGOTADO (Click p/ Reponer)'}
         </button>
       </div>
     `
     )
     .join('');
 
-  // Renderizar lista de reservas tomadas por IA
   const resEl = document.getElementById('admin-reservations-list');
   resEl.innerHTML = reservations
     .map(
       (r) => `
       <div class="stock-row">
         <div>
-          <strong>📅 ${r.time} — ${r.name} (${r.people} pers.)</strong>
-          <div class="text-muted" style="font-size:0.76rem;">Sector: ${r.area} • ${r.notes}</div>
+          <strong>🪑 ${r.time} — ${r.name} (${r.people} cubiertos)</strong>
+          <div style="font-size:0.75rem; color:var(--ink-muted);">${r.area} • ${r.notes}</div>
         </div>
         <span class="order-source-badge">Confirmada</span>
       </div>
@@ -1259,6 +1525,7 @@ function advanceOrderStatus(orderId) {
   if (ord.status === 'new') ord.status = 'cooking';
   else if (ord.status === 'cooking') ord.status = 'ready';
   renderAdminDashboard();
+  renderOrderTracker();
 }
 
 function toggleProductStock(productId) {
@@ -1280,22 +1547,24 @@ function simulateIncomingWhatsAppOrder() {
     address: addresses[idx],
     deliveryType: 'delivery',
     paymentMethod: 'Mercado Pago',
-    source: '🤖 BrasaIA (Simulación En Vivo)',
+    source: '📲 IA (Simulación En Vivo)',
     status: 'new',
-    time: 'Ahora mismo',
+    time: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs',
     total: 27400,
     items: [
-      { name: 'Pizza Rúcula, Crudo y Parmesano', quantity: 1 },
-      { name: 'Empanada de Carne Cortada a Cuchillo', quantity: 4 },
-      { name: 'Limonada Casera con Menta y Jengibre (1L)', quantity: 1 }
+      { name: 'Rúcula Salvaje, Jamón Crudo & Parmesano', quantity: 1, notes: 'Oliva aparte' },
+      { name: 'Empanada de Carne Cortada a Cuchillo', quantity: 4, notes: '' },
+      { name: 'Vermut Rosso de la Casa con Soda', quantity: 1, notes: '' }
     ]
   };
   orders.unshift(simOrder);
+  activeOrderId = simOrder.id;
   renderAdminDashboard();
+  renderOrderTracker();
 }
 
 // ============================================================================
-// CONFIGURACIÓN DE OPENAI API KEY (MODAL EN CALIENTE SIN EXPONER EN GITHUB)
+// CONFIGURACIÓN DE OPENAI API KEY
 // ============================================================================
 async function checkServerAiStatus() {
   const dot = document.getElementById('ai-status-dot');
@@ -1308,20 +1577,20 @@ async function checkServerAiStatus() {
       const data = await res.json();
       if (data.hasServerApiKey || localKey) {
         dot.classList.remove('hybrid');
-        txt.textContent = `OpenAI Activo (${data.model || 'gpt-4o-mini'})`;
+        txt.textContent = `OpenAI (${data.model || 'gpt-4o-mini'})`;
         return;
       }
     }
   } catch {
-    // Servidor estático
+    // Modo local / estático
   }
 
   if (localKey) {
     dot.classList.remove('hybrid');
-    txt.textContent = 'OpenAI Activo (Sesión)';
+    txt.textContent = 'OpenAI Activo';
   } else {
     dot.classList.add('hybrid');
-    txt.textContent = 'IA Activa (Configurar OpenAI Key)';
+    txt.textContent = 'Configurar Key IA';
   }
 }
 
@@ -1357,11 +1626,12 @@ async function saveApiKeyConfig() {
       body: JSON.stringify({ apiKey: key, model })
     });
   } catch {
-    // Si está en Vercel/estático, ya quedó en sessionStorage/localStorage
+    // Guardado en sesión local
   }
 
   await checkServerAiStatus();
-  msg.textContent = '✅ Configuración guardada y activa. La clave NO se sube a GitHub.';
+  msg.style.color = 'var(--green-ok)';
+  msg.style.fontWeight = '700';
+  msg.textContent = '✅ Clave activada correctamente (protegida fuera de GitHub).';
   setTimeout(() => closeApiKeyModal(), 900);
 }
-
