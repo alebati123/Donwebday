@@ -1,6 +1,6 @@
 // ============================================================================
 // LA CANTINA DE DON BRASA — PLATAFORMA INTEGRAL DE BODEGÓN CON IA
-// Carta Interactiva • Conserje IA • Audio/Texto WhatsApp • Mapa de Mesas • POS
+// Carta Interactiva • Conserje IA • Audio/Texto WhatsApp • Mapa de Mesas • ABM Admin
 // ============================================================================
 
 const BUSINESS_INFO = {
@@ -174,7 +174,28 @@ const INITIAL_CATALOG = [
   }
 ];
 
-let catalog = JSON.parse(JSON.stringify(INITIAL_CATALOG));
+function loadSavedCatalog() {
+  try {
+    const raw = localStorage.getItem('CANTINA_CATALOG_V1');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // Usar catálogo por defecto
+  }
+  return JSON.parse(JSON.stringify(INITIAL_CATALOG));
+}
+
+function persistCatalog() {
+  try {
+    localStorage.setItem('CANTINA_CATALOG_V1', JSON.stringify(catalog));
+  } catch {
+    // Ignorar límite de cuota local
+  }
+}
+
+let catalog = loadSavedCatalog();
 let currentCategory = 'all';
 let cart = [];
 let deliveryType = 'delivery';
@@ -182,8 +203,8 @@ let chatHistory = [];
 let suggestedCombosStore = {};
 let activeOrderId = 'DB-1041';
 let selectedTableId = 'T4';
+let currentMobileSubview = 'catalog';
 
-// Mapa de Mesas en Vivo del Bodegón
 let restaurantTables = [
   { id: 'T1', number: 1, zone: 'Salón Histórico (Pellegrini)', capacity: 2, status: 'free', guest: '' },
   { id: 'T2', number: 2, zone: 'Salón Histórico (Pellegrini)', capacity: 4, status: 'occupied', guest: 'Familia Benítez (21:00)' },
@@ -197,7 +218,6 @@ let restaurantTables = [
   { id: 'T10', number: 10, zone: 'Barra de Vermut & Picadas', capacity: 2, status: 'free', guest: '' }
 ];
 
-// Comandas iniciales en cocina
 let orders = [
   {
     id: 'DB-1041',
@@ -271,7 +291,7 @@ let reservations = [
 ];
 
 // ============================================================================
-// INICIALIZACIÓN
+// INICIALIZACIÓN Y ADAPTACIÓN RESPONSIVE
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   renderCatalog();
@@ -281,11 +301,47 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAdminDashboard();
   initWelcomeChat();
   checkServerAiStatus();
+  syncResponsiveLayout();
+  window.addEventListener('resize', syncResponsiveLayout);
 });
 
-// ============================================================================
-// NAVEGACIÓN MULTI-PANTALLA (DESKTOP & MOBILE APP)
-// ============================================================================
+function syncResponsiveLayout() {
+  const isMobileOrTablet = window.innerWidth <= 1040;
+  const subBar = document.getElementById('mobile-subview-bar');
+  const menuScreenActive = document.getElementById('screen-menu')?.classList.contains('active');
+  const mainCol = document.getElementById('menu-main-col');
+  const sideDock = document.getElementById('side-dock');
+
+  if (subBar) {
+    subBar.classList.toggle('show-on-menu', Boolean(isMobileOrTablet && menuScreenActive));
+  }
+
+  if (!isMobileOrTablet) {
+    if (mainCol) mainCol.style.display = 'block';
+    if (sideDock) sideDock.style.display = 'block';
+  } else if (menuScreenActive) {
+    if (currentMobileSubview === 'catalog') {
+      if (mainCol) mainCol.style.display = 'block';
+      if (sideDock) sideDock.style.display = 'none';
+    } else {
+      if (mainCol) mainCol.style.display = 'none';
+      if (sideDock) sideDock.style.display = 'block';
+    }
+  }
+}
+
+function setMobileMenuSubview(subview) {
+  currentMobileSubview = subview;
+  document.querySelectorAll('.msub-btn').forEach((b) => b.classList.remove('active'));
+  const activeBtn = document.getElementById(`msub-${subview}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  if (subview === 'chat' || subview === 'whatsapp' || subview === 'cart') {
+    switchRightTab(subview);
+  }
+  syncResponsiveLayout();
+}
+
 function navigateApp(screenName) {
   document.querySelectorAll('.app-screen').forEach((s) => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'));
@@ -299,10 +355,14 @@ function navigateApp(screenName) {
   if (navEl) navEl.classList.add('active');
   if (mnavEl) mnavEl.classList.add('active');
 
+  if (screenName === 'menu' && window.innerWidth <= 1040) {
+    setMobileMenuSubview('catalog');
+  }
   if (screenName === 'tables') renderTablesFloorplan();
   if (screenName === 'tracker') renderOrderTracker();
   if (screenName === 'admin') renderAdminDashboard();
 
+  syncResponsiveLayout();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -318,16 +378,29 @@ function switchRightTab(tabName) {
 
 function openMobileAssistant() {
   navigateApp('menu');
-  switchRightTab('chat');
-  const dock = document.getElementById('side-dock');
-  if (dock) dock.scrollIntoView({ behavior: 'smooth' });
+  if (window.innerWidth <= 1040) {
+    setMobileMenuSubview('chat');
+  } else {
+    switchRightTab('chat');
+  }
+}
+
+function openWhatsAppParserView() {
+  navigateApp('menu');
+  if (window.innerWidth <= 1040) {
+    setMobileMenuSubview('whatsapp');
+  } else {
+    switchRightTab('whatsapp');
+  }
 }
 
 function openMobileCartOrFocus() {
   navigateApp('menu');
-  switchRightTab('cart');
-  const dock = document.getElementById('side-dock');
-  if (dock) dock.scrollIntoView({ behavior: 'smooth' });
+  if (window.innerWidth <= 1040) {
+    setMobileMenuSubview('cart');
+  } else {
+    switchRightTab('cart');
+  }
 }
 
 // ============================================================================
@@ -347,6 +420,9 @@ function renderCatalog() {
   const onlySinTacc = document.getElementById('filter-sintacc')?.checked;
   const onlyVeggie = document.getElementById('filter-veggie')?.checked;
 
+  const msubCount = document.getElementById('msub-dishes-count');
+  if (msubCount) msubCount.textContent = catalog.length;
+
   const filtered = catalog.filter((item) => {
     const matchesCat = currentCategory === 'all' || item.category === currentCategory;
     const matchesSinTacc = !onlySinTacc || item.tags.includes('sintacc');
@@ -364,7 +440,7 @@ function renderCatalog() {
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; padding: 32px; text-align: center; background: #fff; border-radius: 12px; border: 1px dashed #c2b59e;">
         <p style="font-weight:700; margin-bottom:6px;">No encontramos platos con esos filtros combinados.</p>
-        <p class="sub-copy">Preguntale a <strong>Don Vito (Conserje IA)</strong> en el mostrador derecho para que te arme una sugerencia a medida.</p>
+        <p class="sub-copy">Preguntale a <strong>Don Vito (Conserje IA)</strong> para que te arme una sugerencia a medida.</p>
       </div>
     `;
     return;
@@ -397,7 +473,7 @@ function renderCatalog() {
           <div class="dish-footer">
             <span class="dish-price">$${item.price.toLocaleString('es-AR')}</span>
             <div class="dish-actions">
-              <button class="btn-customize" onclick="openDishModal('${item.id}')" title="Personalizar punto de cocción o notas">
+              <button class="btn-customize" onclick="openDishModal('${item.id}')" title="Personalizar cocción o notas">
                 Opciones
               </button>
               <button
@@ -423,10 +499,10 @@ function openDishModal(dishId) {
   const body = document.getElementById('dish-modal-body');
 
   body.innerHTML = `
-    <img src="${dish.image}" alt="${dish.name}" style="width:100%; height:200px; object-fit:cover; border-radius:10px; margin-bottom:12px;" />
+    <img src="${dish.image}" alt="${dish.name}" style="width:100%; height:190px; object-fit:cover; border-radius:10px; margin-bottom:10px;" />
     <span class="eyebrow-tag">${dish.category}</span>
-    <h3 style="font-family:var(--font-serif); font-size:1.35rem; color:var(--green-bodegon); margin-bottom:6px;">${dish.name}</h3>
-    <p class="sub-copy" style="margin-bottom:14px;">${dish.description}</p>
+    <h3 style="font-family:var(--font-serif); font-size:1.3rem; color:var(--green-bodegon); margin-bottom:4px;">${dish.name}</h3>
+    <p class="sub-copy" style="margin-bottom:12px;">${dish.description}</p>
 
     <div class="form-group" style="margin-bottom:10px;">
       <label>Punto de Cocción / Preparación en Horno de Barro</label>
@@ -444,7 +520,7 @@ function openDishModal(dishId) {
     </div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px dashed var(--border-warm);">
-      <strong style="font-family:var(--font-mono); font-size:1.25rem; color:var(--green-bodegon);">$${dish.price.toLocaleString('es-AR')}</strong>
+      <strong style="font-family:var(--font-mono); font-size:1.2rem; color:var(--green-bodegon);">$${dish.price.toLocaleString('es-AR')}</strong>
       <button
         class="btn-terracotta"
         ${!dish.inStock ? 'disabled' : ''}
@@ -534,6 +610,7 @@ function renderCart() {
   const listEl = document.getElementById('cart-items-list');
   const badgeEl = document.getElementById('cart-count-badge');
   const dockCountEl = document.getElementById('dock-cart-count');
+  const msubCartEl = document.getElementById('msub-cart-count');
   const headerTotalEl = document.getElementById('header-cart-total');
   const breakdownEl = document.getElementById('totals-breakdown');
   const upsellBox = document.getElementById('ai-upsell-box');
@@ -541,6 +618,7 @@ function renderCart() {
   const { subtotal, discount, shipping, finalTotal, totalItems } = calculateCartTotals();
   badgeEl.textContent = totalItems;
   if (dockCountEl) dockCountEl.textContent = totalItems;
+  if (msubCartEl) msubCartEl.textContent = totalItems;
   if (headerTotalEl) headerTotalEl.textContent = `$${finalTotal.toLocaleString('es-AR')}`;
 
   if (cart.length === 0) {
@@ -574,17 +652,19 @@ function renderCart() {
     const hasPizza = cart.some((c) => c.id.startsWith('p'));
     const hasFaina = cart.some((c) => c.id === 'b3');
     const hasDrink = cart.some((c) => c.id.startsWith('d'));
+    const fainaProd = catalog.find((p) => p.id === 'b3');
+    const vermutProd = catalog.find((p) => p.id === 'd3');
 
-    if (hasPizza && !hasFaina && catalog.find((p) => p.id === 'b3')?.inStock) {
+    if (hasPizza && !hasFaina && fainaProd?.inStock) {
       upsellBox.classList.remove('hidden');
       upsellBox.innerHTML = `
-        <div>✨ <strong>Sugerencia del Horno:</strong> ¿Marchamos una porción de <em>Fainá al Molde de Cobre</em> por $2.400?</div>
+        <div>✨ <strong>Sugerencia del Horno:</strong> ¿Marchamos una porción de <em>${fainaProd.name}</em> por $${fainaProd.price.toLocaleString('es-AR')}?</div>
         <button class="btn-add-dish" onclick="addToCart('b3', 1, 'A caballo')">+ Sumar</button>
       `;
-    } else if (!hasDrink && catalog.find((p) => p.id === 'd3')?.inStock) {
+    } else if (!hasDrink && vermutProd?.inStock) {
       upsellBox.classList.remove('hidden');
       upsellBox.innerHTML = `
-        <div>✨ <strong>Maridaje Cantina:</strong> ¿Agregamos un <em>Vermut Rosso de la Casa</em> bien frío por $5.400?</div>
+        <div>✨ <strong>Maridaje Cantina:</strong> ¿Agregamos un <em>${vermutProd.name}</em> bien frío por $${vermutProd.price.toLocaleString('es-AR')}?</div>
         <button class="btn-add-dish" onclick="addToCart('d3', 1, '')">+ Sumar</button>
       `;
     } else {
@@ -698,8 +778,9 @@ function handleManualReservationSubmit(e) {
   const time = document.getElementById('res-time').value;
   const notes = document.getElementById('res-notes').value.trim() || 'Reserva desde Plano Interactivo Web';
 
-  const tableObj = restaurantTables.find((t) => t.id === selectedTableId && t.status === 'free') ||
-                   restaurantTables.find((t) => t.status === 'free');
+  const tableObj =
+    restaurantTables.find((t) => t.id === selectedTableId && t.status === 'free') ||
+    restaurantTables.find((t) => t.status === 'free');
 
   registerNewReservation({
     name,
@@ -721,8 +802,9 @@ function registerNewReservation(resObj) {
     targetTable = restaurantTables.find((t) => t.id === resObj.tableId && t.status === 'free');
   }
   if (!targetTable) {
-    targetTable = restaurantTables.find((t) => t.status === 'free' && t.capacity >= (Number(resObj.people) || 2)) ||
-                  restaurantTables.find((t) => t.status === 'free');
+    targetTable =
+      restaurantTables.find((t) => t.status === 'free' && t.capacity >= (Number(resObj.people) || 2)) ||
+      restaurantTables.find((t) => t.status === 'free');
   }
 
   if (targetTable) {
@@ -757,7 +839,7 @@ function initWelcomeChat() {
   appendAssistantMessage({
     reply:
       '¡Buenas noches! Soy **Don Vito**, el conserje digital de **La Cantina de Don Brasa**.\n\n' +
-      'Estoy conectado en vivo con el horno de barro y el plano del salón:\n' +
+      'Estoy conectado en vivo con los precios, platos y el plano del salón:\n' +
       '• 🍕 Decime **cuántos son y qué presupuesto tienen** para armarte la mesa ideal.\n' +
       '• 🛵 Dictame tu pedido con dirección y te lo cargo directo en la comanda.\n' +
       '• 🪑 Pedime **mesa en el Patio o Salón** y te la reservo en el plano al instante.'
@@ -870,7 +952,11 @@ function applySuggestedCombo(comboId) {
   const items = suggestedCombosStore[comboId];
   if (!items) return;
   items.forEach((it) => addToCart(it.id, it.quantity, 'Combo sugerido IA'));
-  switchRightTab('cart');
+  if (window.innerWidth <= 1040) {
+    setMobileMenuSubview('cart');
+  } else {
+    switchRightTab('cart');
+  }
 }
 
 function applyExtractedCustomerData(ext) {
@@ -893,7 +979,11 @@ function applyExtractedCustomerData(ext) {
 
 function triggerQuickPrompt(promptText) {
   navigateApp('menu');
-  switchRightTab('chat');
+  if (window.innerWidth <= 1040) {
+    setMobileMenuSubview('chat');
+  } else {
+    switchRightTab('chat');
+  }
   const input = document.getElementById('chat-input');
   input.value = promptText;
   sendChatMessage(promptText);
@@ -918,7 +1008,7 @@ async function sendChatMessage(userText, mode = 'chat') {
   const box = document.getElementById('chat-messages');
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'msg-bubble assistant';
-  loadingDiv.innerHTML = `<div class="msg-header">Don Vito • Conserje IA</div><div>🔥 <em>Consultando stock en cocina y armando respuesta...</em></div>`;
+  loadingDiv.innerHTML = `<div class="msg-header">Don Vito • Conserje IA</div><div>🔥 <em>Consultando precios y stock en vivo...</em></div>`;
   if (mode === 'chat') {
     box.appendChild(loadingDiv);
     box.scrollTop = box.scrollHeight;
@@ -1013,7 +1103,7 @@ async function callOpenAiDirectlyFromBrowser(messages, apiKey, model, mode) {
 }
 
 // ============================================================================
-// MOTOR NLU LOCAL RESILIENTE
+// MOTOR NLU LOCAL RESILIENTE (USA PRECIOS Y PLATOS DINÁMICOS DEL ADMIN)
 // ============================================================================
 function localSmartEngine(rawText) {
   const text = rawText.toLowerCase();
@@ -1025,7 +1115,6 @@ function localSmartEngine(rawText) {
     reservation: { detected: false }
   };
 
-  // Extraer dirección, nombre, modalidad y pago
   const addressMatch = rawText.match(
     /(?:a\s+|en\s+|direcci[oó]n[:\s]+)?((?:bv\.?\s*oro[ñn]o|pellegrini|rioja|cordoba|c[oó]rdoba|santa\s+fe|san\s+mart[ií]n|mitre|sarmiento|entre\s+r[ií]os|corrientes|9\s+de\s+julio|3\s+de\s+febrero|mendoza|san\s+juan|urquiza|italia|espa[ñn]a|dorrego|moreno|balcarce|ov\.?\s*lagos|francia|callao|pichincha)\s+\d{2,5}(?:\s*piso\s*\w+)?(?:\s*dto\s*\w+|\s*[a-z])?)/i
   );
@@ -1111,14 +1200,14 @@ function localSmartEngine(rawText) {
     const listStr = combo.map((c) => `• **${c.quantity}x ${c.name}** ($${(c.price * c.quantity).toLocaleString('es-AR')})`).join('\n');
 
     result.reply =
-      `Para cuidar tu presupuesto de **$${budget.toLocaleString('es-AR')}**, armé esta mesa bien abundante con lo que está saliendo ahora del horno de barro:\n\n` +
+      `Para cuidar tu presupuesto de **$${budget.toLocaleString('es-AR')}**, armé esta mesa bien abundante con los precios vigentes de hoy:\n\n` +
       `${listStr}\n\n` +
-      `💰 **Total: $${runningTotal.toLocaleString('es-AR')}** (Te sobran $${(budget - runningTotal).toLocaleString('es-AR')}).\n` +
+      `💰 **Total: $${runningTotal.toLocaleString('es-AR')}** (Te sobran $${Math.max(0, budget - runningTotal).toLocaleString('es-AR')}).\n` +
       `Tocá el botón terracota acá abajo para marchar todo junto a tu comanda:`;
     return result;
   }
 
-  // Detección de platos pedidos directamente
+  // Detección de platos pedidos (incluyendo platos nuevos subidos por el Admin)
   const wordNums = { una: 1, un: 1, uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, media: 6, docena: 12 };
   const matcherRules = [
     { id: 'p5', regex: /(\d+|una|un|dos|tres)?\s*(?:pizzas?\s*)?(?:muzza(?:rella)?\s+)?sin\s+tacc/i },
@@ -1138,6 +1227,19 @@ function localSmartEngine(rawText) {
     { id: 'd3', regex: /(\d+|una|un|dos)?\s*(?:vermut|verm[uú]th)/i },
     { id: 'd4', regex: /(\d+|una|un|dos)?\s*flan(?:es)?/i }
   ];
+
+  // Agregar detección dinámica para productos creados por el Admin
+  catalog.forEach((item) => {
+    if (!matcherRules.some((r) => r.id === item.id)) {
+      const keywords = item.name
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length > 3);
+      if (keywords.length > 0 && keywords.some((kw) => text.includes(kw))) {
+        result.autoCartAdd.push({ id: item.id, quantity: 1 });
+      }
+    }
+  });
 
   const outOfStockRequested = [];
   matcherRules.forEach((rule) => {
@@ -1192,7 +1294,6 @@ function localSmartEngine(rawText) {
     return result;
   }
 
-  // Consultas dietarias Sin TACC / Veggie
   if (text.includes('tacc') || text.includes('celiac') || text.includes('celíac') || text.includes('veggie') || text.includes('vegetarian')) {
     const sintacc = catalog.filter((p) => p.inStock && p.tags.includes('sintacc'));
     const veggie = catalog.filter((p) => p.inStock && p.tags.includes('veggie'));
@@ -1209,15 +1310,11 @@ function localSmartEngine(rawText) {
     return result;
   }
 
-  // Respuesta general con sugerencia de la casa
-  result.suggestedItems = [
-    { id: 'p3', quantity: 1 },
-    { id: 'e1', quantity: 4 },
-    { id: 'd3', quantity: 1 }
-  ];
+  const avail = catalog.filter((p) => p.inStock);
+  result.suggestedItems = avail.slice(0, 3).map((p) => ({ id: p.id, quantity: 1 }));
   result.reply =
     `¡Adelante! Podés pedirme que te arme un combo según tu presupuesto, dictarme tu pedido con dirección o reservar mesa en el patio.\n\n` +
-    `Te dejo acá abajo la **Selección Favorita de los Habitués de Pellegrini** por si querés marcharla con 1 clic:`;
+    `Te dejo acá abajo una selección con los precios actualizados de hoy por si querés marcharla con 1 clic:`;
   return result;
 }
 
@@ -1282,7 +1379,7 @@ async function processWhatsAppText() {
         : document.getElementById('cust-address').value || 'Envío a domicilio'
     }</div>
     <div style="font-family:var(--font-mono); font-weight:700; margin-top:4px;">TOTAL: $${finalTotal.toLocaleString('es-AR')}</div>
-    <button class="btn-terracotta btn-block" style="margin-top:10px;" onclick="switchRightTab('cart')">
+    <button class="btn-terracotta btn-block" style="margin-top:10px;" onclick="openMobileCartOrFocus()">
       🧾 Ver Ticket Listo para Marchar (${totalItems})
     </button>
   `;
@@ -1407,8 +1504,8 @@ function renderOrderTracker() {
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <span class="sub-copy" style="font-size:0.82rem;">💡 Podés cambiar el estado de esta comanda desde la vista <strong>👨‍🍳 Comandera Cocina</strong> y ver cómo se actualiza en vivo.</span>
-        <button class="btn-outline-dark" onclick="navigateApp('admin')">
+        <span class="sub-copy" style="font-size:0.82rem;">💡 Podés cambiar el estado de esta comanda desde el <strong>👨‍🍳 Panel Admin & Cocina</strong> y ver cómo se actualiza en vivo.</span>
+        <button class="btn-outline-dark" onclick="navigateApp('admin'); switchAdminSubtab('kanban');">
           👨‍🍳 Ir a Comandera de Cocina →
         </button>
       </div>
@@ -1417,8 +1514,18 @@ function renderOrderTracker() {
 }
 
 // ============================================================================
-// COMANDERA DE COCINA POS & GESTIÓN DE STOCK EN VIVO
+// PANEL ADMINISTRADOR: ABM DE PRODUCTOS, EDITOR DE PRECIOS, STOCK Y KANBAN
 // ============================================================================
+function switchAdminSubtab(tabName) {
+  document.querySelectorAll('.adm-subtab').forEach((b) => b.classList.remove('active'));
+  document.querySelectorAll('.adm-view').forEach((v) => v.classList.remove('active'));
+
+  const tab = document.getElementById(`admtab-${tabName}`);
+  const view = document.getElementById(`admview-${tabName}`);
+  if (tab) tab.classList.add('active');
+  if (view) view.classList.add('active');
+}
+
 function renderAdminDashboard() {
   document.getElementById('admin-orders-badge').textContent = orders.length;
   document.getElementById('kpi-orders-count').textContent = orders.length;
@@ -1426,12 +1533,11 @@ function renderAdminDashboard() {
   const totalRev = orders.reduce((acc, o) => acc + (o.total || 0), 0);
   document.getElementById('kpi-revenue').textContent = '$' + totalRev.toLocaleString('es-AR');
 
-  const minsSaved = orders.length * 8 + reservations.length * 5;
-  const hrs = Math.floor(minsSaved / 60);
-  const remMins = minsSaved % 60;
-  document.getElementById('kpi-time-saved').textContent = hrs > 0 ? `${hrs}h ${remMins}m` : `${remMins} min`;
+  const kpiCat = document.getElementById('kpi-catalog-count');
+  if (kpiCat) kpiCat.textContent = catalog.length;
   document.getElementById('kpi-reservations-count').textContent = reservations.length;
 
+  // Renderizar Kanban de Comandas
   const cols = { new: [], cooking: [], ready: [] };
   orders.forEach((o) => {
     if (cols[o.status]) cols[o.status].push(o);
@@ -1480,24 +1586,55 @@ function renderAdminDashboard() {
   document.getElementById('kanban-cooking').innerHTML = cols.cooking.map(renderOrderCard).join('');
   document.getElementById('kanban-ready').innerHTML = cols.ready.map(renderOrderCard).join('');
 
+  // Renderizar Lista de Productos con Edición de Precios en Línea, Editar, Stock y Eliminar
   const stockEl = document.getElementById('admin-stock-list');
   stockEl.innerHTML = catalog
     .map(
       (item) => `
-      <div class="stock-row">
+      <div class="admin-prod-row">
         <div class="stock-dish-cell">
           <img src="${item.image}" alt="${item.name}" class="stock-thumb" loading="lazy" />
           <div>
             <strong>${item.name}</strong>
-            <div style="font-family:var(--font-mono); font-size:0.74rem; color:var(--ink-muted);">$${item.price.toLocaleString('es-AR')}</div>
+            <div style="font-size:0.74rem; color:var(--ink-muted);">${item.category} • ID: <code>${item.id}</code></div>
           </div>
         </div>
-        <button
-          class="btn-toggle-stock ${item.inStock ? 'in-stock' : 'out-stock'}"
-          onclick="toggleProductStock('${item.id}')"
-        >
-          ${item.inStock ? '🟢 En Stock (Click p/ Agotar)' : '🔴 AGOTADO (Click p/ Reponer)'}
-        </button>
+
+        <div class="inline-price-box">
+          <span>$</span>
+          <input
+            type="number"
+            id="price-input-${item.id}"
+            class="inline-price-input"
+            value="${item.price}"
+            step="50"
+            min="100"
+          />
+          <button
+            type="button"
+            class="btn-save-price"
+            id="btn-save-price-${item.id}"
+            onclick="saveInlinePrice('${item.id}')"
+          >
+            Guardar $
+          </button>
+        </div>
+
+        <div class="admin-row-actions">
+          <button
+            type="button"
+            class="btn-toggle-stock ${item.inStock ? 'in-stock' : 'out-stock'}"
+            onclick="toggleProductStock('${item.id}')"
+          >
+            ${item.inStock ? '🟢 En Stock' : '🔴 AGOTADO'}
+          </button>
+          <button type="button" class="btn-edit-prod" onclick="openProductEditorModal('${item.id}')">
+            ✏️ Editar
+          </button>
+          <button type="button" class="btn-delete-prod" onclick="deleteProductFromCatalog('${item.id}')" title="Eliminar producto">
+            🗑️
+          </button>
+        </div>
       </div>
     `
     )
@@ -1519,6 +1656,169 @@ function renderAdminDashboard() {
     .join('');
 }
 
+function saveInlinePrice(productId) {
+  const input = document.getElementById(`price-input-${productId}`);
+  const btn = document.getElementById(`btn-save-price-${productId}`);
+  const prod = catalog.find((p) => p.id === productId);
+  if (!input || !prod) return;
+
+  const newPrice = Math.max(100, Math.round(Number(input.value) || prod.price));
+  prod.price = newPrice;
+  persistCatalog();
+  renderCatalog();
+  renderCart();
+
+  if (btn) {
+    btn.textContent = '✓ Guardado';
+    btn.style.background = 'var(--terracotta)';
+    setTimeout(() => {
+      btn.textContent = 'Guardar $';
+      btn.style.background = 'var(--green-bodegon)';
+    }, 1200);
+  }
+}
+
+function applyBulkPriceChange(percent) {
+  const factor = 1 + percent / 100;
+  catalog.forEach((item) => {
+    item.price = Math.max(100, Math.round((item.price * factor) / 50) * 50);
+  });
+  persistCatalog();
+  renderCatalog();
+  renderCart();
+  renderAdminDashboard();
+}
+
+function resetCatalogToDefaults() {
+  catalog = JSON.parse(JSON.stringify(INITIAL_CATALOG));
+  persistCatalog();
+  renderCatalog();
+  renderCart();
+  renderAdminDashboard();
+}
+
+function deleteProductFromCatalog(productId) {
+  if (catalog.length <= 1) return;
+  catalog = catalog.filter((p) => p.id !== productId);
+  cart = cart.filter((c) => c.id !== productId);
+  persistCatalog();
+  renderCatalog();
+  renderCart();
+  renderAdminDashboard();
+}
+
+const PRESET_PHOTOS = {
+  pizza: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=640&q=80',
+  empanada: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=640&q=80',
+  bodegon: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=640&q=80',
+  bebida: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=640&q=80'
+};
+
+function setPresetDishPhoto(type) {
+  const input = document.getElementById('edit-prod-image');
+  if (input && PRESET_PHOTOS[type]) {
+    input.value = PRESET_PHOTOS[type];
+  }
+}
+
+function handleLocalImageUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target?.result;
+    if (typeof dataUrl === 'string') {
+      document.getElementById('edit-prod-image').value = dataUrl;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function openProductEditorModal(productId = null) {
+  const modal = document.getElementById('product-editor-modal');
+  const titleEl = document.getElementById('prod-editor-title');
+  const existing = productId ? catalog.find((p) => p.id === productId) : null;
+
+  if (existing) {
+    titleEl.textContent = `Editar Plato: ${existing.name}`;
+    document.getElementById('edit-prod-id').value = existing.id;
+    document.getElementById('edit-prod-name').value = existing.name;
+    document.getElementById('edit-prod-category').value = existing.category;
+    document.getElementById('edit-prod-price').value = existing.price;
+    document.getElementById('edit-prod-stock').value = String(existing.inStock);
+    document.getElementById('edit-prod-desc').value = existing.description;
+    document.getElementById('edit-prod-image').value = existing.image;
+    document.getElementById('edit-tag-popular').checked = existing.tags.includes('popular');
+    document.getElementById('edit-tag-sintacc').checked = existing.tags.includes('sintacc');
+    document.getElementById('edit-tag-veggie').checked = existing.tags.includes('veggie');
+  } else {
+    titleEl.textContent = 'Subir Nuevo Plato / Producto a la Carta';
+    document.getElementById('edit-prod-id').value = '';
+    document.getElementById('edit-prod-name').value = '';
+    document.getElementById('edit-prod-category').value = 'Pizzas';
+    document.getElementById('edit-prod-price').value = '14500';
+    document.getElementById('edit-prod-stock').value = 'true';
+    document.getElementById('edit-prod-desc').value = '';
+    document.getElementById('edit-prod-image').value = PRESET_PHOTOS.pizza;
+    document.getElementById('edit-tag-popular').checked = true;
+    document.getElementById('edit-tag-sintacc').checked = false;
+    document.getElementById('edit-tag-veggie').checked = false;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeProductEditorModal() {
+  document.getElementById('product-editor-modal').classList.add('hidden');
+}
+
+function saveProductFromModal(e) {
+  e.preventDefault();
+  const idVal = document.getElementById('edit-prod-id').value.trim();
+  const name = document.getElementById('edit-prod-name').value.trim();
+  const category = document.getElementById('edit-prod-category').value;
+  const price = Math.max(100, Number(document.getElementById('edit-prod-price').value) || 10000);
+  const inStock = document.getElementById('edit-prod-stock').value === 'true';
+  const description = document.getElementById('edit-prod-desc').value.trim();
+  const image = document.getElementById('edit-prod-image').value.trim() || PRESET_PHOTOS.pizza;
+
+  const tags = [];
+  if (document.getElementById('edit-tag-popular').checked) tags.push('popular');
+  if (document.getElementById('edit-tag-sintacc').checked) tags.push('sintacc');
+  if (document.getElementById('edit-tag-veggie').checked) tags.push('veggie');
+
+  if (idVal) {
+    const existing = catalog.find((p) => p.id === idVal);
+    if (existing) {
+      existing.name = name;
+      existing.category = category;
+      existing.price = price;
+      existing.inStock = inStock;
+      existing.description = description;
+      existing.image = image;
+      existing.tags = tags;
+    }
+  } else {
+    const newId = 'custom_' + (catalog.length + 1) + '_' + Math.floor(Math.random() * 900);
+    catalog.unshift({
+      id: newId,
+      name,
+      category,
+      price,
+      image,
+      inStock,
+      tags,
+      description
+    });
+  }
+
+  persistCatalog();
+  renderCatalog();
+  renderCart();
+  renderAdminDashboard();
+  closeProductEditorModal();
+}
+
 function advanceOrderStatus(orderId) {
   const ord = orders.find((o) => o.id === orderId);
   if (!ord) return;
@@ -1532,6 +1832,7 @@ function toggleProductStock(productId) {
   const prod = catalog.find((p) => p.id === productId);
   if (!prod) return;
   prod.inStock = !prod.inStock;
+  persistCatalog();
   renderCatalog();
   renderAdminDashboard();
 }
@@ -1561,6 +1862,7 @@ function simulateIncomingWhatsAppOrder() {
   activeOrderId = simOrder.id;
   renderAdminDashboard();
   renderOrderTracker();
+  switchAdminSubtab('kanban');
 }
 
 // ============================================================================
