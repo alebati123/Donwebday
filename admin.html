@@ -231,17 +231,18 @@
           <div class="report-block">
             <h3>1. Problemas Resueltos</h3>
             <ul>
-              <li><strong>Eliminación de esperas de 30-40 min en WhatsApp:</strong> El Mozo Virtual ("Don Vito") recomienda platos según lo que el grupo tiene ganas de comer y carga el pedido directamente al carrito.</li>
-              <li><strong>Reservas inteligentes para grupos impares (3, 5, 7) y grandes:</strong> El algoritmo de salón evita ubicar a 3 personas en una mesa chica de 2; asigna automáticamente mesas cómodas de 4, 6 u 8 agregando silla en cabecera o uniendo mesas.</li>
-              <li><strong>Cero quiebres de stock:</strong> Si en cocina se agota un plato o cambia un precio desde este panel, la IA actualiza su contexto en el acto.</li>
+              <li><strong>Eliminación de esperas de 30-40 min en WhatsApp:</strong> El Mozo Virtual ("Don Vito") recomienda platos según lo que el grupo tiene ganas de comer y carga el pedido directamente al carrito con dirección y método de pago extraídos en lenguaje natural.</li>
+              <li><strong>Reservas inteligentes para grupos impares (3, 5, 7) y grandes:</strong> El algoritmo de salón evita ubicar a 3 personas en una mesa chica de 2; asigna automáticamente mesas cómodas de 4, 6 u 8 agregando silla en cabecera o uniendo mesas, activándose únicamente cuando el cliente lo solicita de forma explícita.</li>
+              <li><strong>Cero quiebres de stock:</strong> Si en cocina se agota un plato o cambia un precio desde este panel, la IA actualiza su contexto en el acto y ofrece alternativas disponibles.</li>
             </ul>
           </div>
 
           <div class="report-block">
-            <h3>2. Arquitectura Técnica</h3>
+            <h3>2. Arquitectura Técnica y Despliegue</h3>
             <ul>
               <li><strong>Separación de Roles:</strong> Interfaz limpia para el comensal en <code>/index.html</code> y Backoffice administrativo/cocina en <code>/admin.html</code>.</li>
-              <li><strong>Sincronización en Tiempo Real:</strong> Estado compartido vía <code>/api/state</code> en el servidor Node.js y eventos de almacenamiento en navegador.</li>
+              <li><strong>Sincronización en Tiempo Real:</strong> Estado compartido vía <code>/api/state</code> en el servidor Node.js y persistencia en <code>localStorage</code>.</li>
+              <li><strong>Despliegue DonWeb Cloud:</strong> Corriendo en vivo en <code>http://201.32.132.185/</code> sobre Ubuntu 24.04 LTS con servicio <code>systemd</code> resiliente.</li>
               <li><strong>Integración OpenAI Segura:</strong> Conectado a <code>gpt-4o-mini</code> con modo JSON estructurado, manteniendo la <code>OPENAI_API_KEY</code> protegida en variables de entorno fuera de GitHub.</li>
             </ul>
           </div>
@@ -373,3 +374,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+

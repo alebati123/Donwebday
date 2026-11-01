@@ -1,91 +1,119 @@
-# 🔥 Don Brasa IA — Plataforma de Atención, Pedidos y Reservas Automatizadas con IA
+# 🍕 La Cantina de Don Brasa — Plataforma de Bodegón con IA
+### Solución Integral de Atención, Pedidos y Reservas para Gastronomía Local
 
 > **Hackatón DonWeb Day Rosario 2026** — *"Del problema al servidor"*  
-> **Rubro elegido:** Gastronomía Local (Bodegón & Pizzería Rosarina)  
-> **Enfoque:** Catálogo en Tiempo Real + Concierge IA de Pedidos y Presupuestos + Transformador de Mensajes de WhatsApp a Comanda + Backoffice Kanban de Cocina y Reservas.
+> **Comercio:** La Cantina de Don Brasa (Av. Pellegrini 1540, Rosario)  
+> **Repositorio Oficial:** [https://github.com/alebati123/Donwebday.git](https://github.com/alebati123/Donwebday.git)  
+> **Despliegue en Vivo (DonWeb Cloud Server):** [http://201.32.132.185/](http://201.32.132.185/)  
+> **Panel de Cocina & Administración:** [http://201.32.132.185/admin.html](http://201.32.132.185/admin.html)
 
 ---
 
-## 🎯 1. Diagnóstico del Problema
-Un comercio gastronómico local tradicional atiende decenas de consultas, pedidos y reservas a mano por **WhatsApp y teléfono** en simultáneo durante la franja crítica (20:00 a 23:00 hs). Esto provoca:
-1. **Demoras de 20 a 45 minutos** en responder cada mensaje de WhatsApp, perdiendo más del 35% de las ventas por abandono.
-2. **Errores humanos de tipeo o interpretación de audios**, enviando productos equivocados o tomando direcciones incompletas.
-3. **Desconexión entre quien atiende el teléfono y la cocina:** se siguen vendiendo platos que acaban de agotarse en el mostrador.
-4. **Falta de venta sugerida (Upselling):** por apuro, el operador no ofrece bebidas, postres ni acompañamientos.
+## 🎯 1. Diagnóstico del Problema en Negocios Locales
+
+Los comercios gastronómicos tradicionales (bodegones, pizzerías y rotiserías) concentran más del 70% de su demanda entre las 20:00 y las 23:30 hs. Durante esa franja crítica, la atención manual por WhatsApp y llamadas genera graves pérdidas:
+
+1. **Pérdida directa de ventas por demoras:** Tiempos de respuesta de 25 a 40 minutos en responder un mensaje de WhatsApp provocan que los clientes pidan en otro lugar.
+2. **Errores humanos en la toma de pedidos:** Confusión en direcciones, falta de registro de medios de pago o errores al transcribir pedidos dictados de forma informal.
+3. **Mala gestión de reservas en grupos impares:** Clientes que quieren reservar para 3, 5 o 7 personas son rechazados o apretados en mesas de 2 o 4 personas por falta de flexibilidad en el plano de mesas.
+4. **Desconexión con la cocina (Quiebres de Stock):** Quien atiende el chat desconoce qué platos se agotaron en el horno de barro, generando reclamos posteriores y cancelaciones.
 
 ---
 
-## 💡 2. Nuestra Solución: Don Brasa IA
-Construimos una plataforma web integral donde la **Inteligencia Artificial está integrada en el corazón del flujo operativo**, conectando la experiencia del cliente con la cocina del local en tiempo real:
+## 💡 2. Nuestra Solución: Arquitectura de Doble Entorno con IA
 
-### A. Para el Cliente (Tienda + Concierge IA)
-* **🤖 Asistente Conversacional BrasaIA (OpenAI `gpt-4o-mini` / `gpt-4o`):**
-  * **Armado de Combos por Presupuesto y Restricciones:** El cliente escribe *"Somos 4 amigos, uno es vegetariano, queremos gastar menos de $36.000"* y la IA calcula matemáticamente la mejor combinación con platos en stock y genera una tarjeta interactiva para agregar todo el combo al carrito en **1 clic**.
-  * **Toma de Pedidos con Acciones Directas (`autoCartAdd`):** Si el cliente escribe *"Mandame 1 pizza napolitana, 6 empanadas de carne a cuchillo y 1 limonada a Bv. Oroño 840"*, la IA interpreta los ítems, valida stock, suma los productos al carrito y autocompleta la dirección de entrega y medio de pago.
-  * **Gestión de Reservas de Mesas:** Detecta solicitudes de reserva en lenguaje natural y las registra automáticamente en la agenda del local.
-* **📲 Transformador de WhatsApp / Audio Transcripto a Comanda (1-Click):**
-  * Permite pegar un mensaje largo y desordenado de WhatsApp para que la IA extraiga instantáneamente productos, cantidades, nombre, dirección, modalidad (*Delivery* o *Take Away*) y forma de pago.
-* **✨ Upselling Inteligente en el Carrito:**
-  * Sugiere automáticamente acompañamientos (ej. porción de fainá o bebida fresca) según la composición del carrito.
+Diseñamos una plataforma web completa dividida en dos aplicaciones independientes pero sincronizadas en tiempo real:
 
-### B. Para el Comercio (Panel Operativo en Tiempo Real)
-* **🔥 Tablero Kanban de Comandas (`Nuevos` → `En Cocina` → `En Camino`):**
-  * Cada pedido confirmado desde la web o el asistente IA ingresa estructurado al tablero de cocina al instante.
-* **📦 Control de Stock Sincronizado con el Contexto del LLM:**
-  * Si el encargado marca un plato como **Agotado** en el panel de control, el prompt del asistente IA se actualiza en el acto: si un cliente intenta pedir ese plato por chat, la IA le avisa que se agotó en cocina y le ofrece el sustituto más cercano disponible.
-* **📊 Métricas de Impacto Operativo (KPIs):**
-  * Visualización en vivo de pedidos automatizados, facturación procesada, mesas reservadas y horas de trabajo humano ahorradas.
-
----
-
-## 🏗️ 3. Arquitectura Técnica y Seguridad de la API Key
-
-```mermaid
-flowchart LR
-    U["Cliente / Operador Web"] --> FE["Frontend Reactivo (index.html + app.js)"]
-    FE -->|POST /api/chat + Catálogo Vivo| BE["Backend Node.js / Serverless (/api/chat.js)"]
-    BE -->|OPENAI_API_KEY en variable de entorno| OAI["OpenAI API (gpt-4o-mini JSON Mode)"]
-    BE -.->|Fallback de Alta Disponibilidad| NLU["Motor NLU Local Resiliente"]
-    FE <-->|Sincronización en Vivo| ADM["Tablero Kanban Cocina + Stock"]
+```
+                  ┌────────────────────────────────────────┐
+                  │          CLIENTE WEB (index.html)      │
+                  │   Carta Fotográfica + Mozo Virtual     │
+                  │   Carrito de Compras + Mesas Flexibles │
+                  └───────────────────┬────────────────────┘
+                                      │
+                   Sincronización HTTP / State + SSE
+                                      │
+                  ┌───────────────────┴────────────────────┐
+                  │      DONWEB CLOUD SERVER (Node.js)     │
+                  │       http://201.32.132.185:80/        │
+                  │   Integrado con OpenAI (gpt-4o-mini)   │
+                  └───────────────────┬────────────────────┘
+                                      │
+                  ┌───────────────────┴────────────────────┐
+                  │     PANEL ADMIN & COCINA (admin.html)  │
+                  │   Kanban de Cocina + ABM de Platos     │
+                  │   Editor de Precios + Control de Mesas │
+                  └────────────────────────────────────────┘
 ```
 
-### 🔒 Protección de Credenciales (OpenAI API Key)
-Siguiendo las buenas prácticas de seguridad exigidas en la hackatón:
-* **La API Key NUNCA se sube al repositorio de GitHub.**
-* El archivo `.env` está excluido mediante `.gitignore` (se provee únicamente `.env.example` como plantilla).
-* En producción (Vercel / Render / Railway / DonWeb Cloud VPS), la clave se inyecta mediante la variable de entorno `OPENAI_API_KEY` o a través del modal seguro de configuración en caliente (`/api/config-key`).
+---
+
+## 📱 3. Funcionalidades para el Cliente (`/index.html`)
+
+* **🍽️ Carta Digital Fotográfica Editorial:** Platos tradicionales de bodegón, pizzas al horno de barro, empanadas y opciones Sin TACC / Vegetarianas con filtros por categoría y modal de personalización (punto de cocción y notas al maestro pizzero).
+* **💬 Don Vito (Mozo Virtual con IA - OpenAI `gpt-4o-mini`):**
+  * **Recomendaciones por ganas de comer:** En lugar de indagar en presupuestos fríos, Don Vito consulta qué tienen ganas de probar y sugiere combinaciones tentadoras listas para agregar con 1 clic.
+  * **Carga automática al Carrito (`autoCartAdd`):** Si el cliente escribe su pedido en lenguaje natural (ej: *"Mandame 1 muzzarella al molde y 4 empanadas de carne a Rioja 1450, soy Martín y pago por transferencia"*), la IA detecta los platos, las cantidades, el nombre, la dirección y el método de pago, cargándolos automáticamente al carrito.
+* **🪑 Reserva Inteligente de Mesas Modulares:**
+  * Solución específica para comensales impares (3, 5 y 7 personas) y grupos grandes (8 a 12 personas).
+  * El sistema asigna automáticamente mesas cómodas de mayor capacidad y calcula la configuración de asientos (ej. *"Mesa de 4 adaptada para 3 con silla en cabecera"* o *"Unión de mesas contiguas"*).
+  * **Protección anti-falsos positivos:** La IA solo reserva cuando el cliente lo solicita explícitamente, evitando reservas automáticas al hacer preguntas sobre comida.
+* **🛵 Seguimiento de Pedido en Vivo:** Línea de tiempo térmica que avanza conforme la cocina cambia el estado del pedido.
+* **📱 100% Responsive:** Diseñado con grillas adaptativas para celulares pequeños (320px, 375px), tablets (768px) y pantallas de escritorio (1024px, 1440px).
 
 ---
 
-## 🚀 4. Cómo Ejecutar y Desplegar
+## 👨‍🍳 4. Funcionalidades para el Comercio (`/admin.html`)
 
-### Ejecución Local
-1. Clonar el repositorio:
-   ```bash
-   git clone https://github.com/alebati123/Donwebday.git
-   cd Donwebday
-   ```
-2. Copiar `.env.example` a `.env` y colocar la clave de OpenAI:
-   ```env
-   OPENAI_API_KEY=sk-proj-...
-   OPENAI_MODEL=gpt-4o-mini
-   PORT=3000
-   ```
-3. Iniciar el servidor (cero dependencias externas, arranca en milisegundos con Node.js nativo):
-   ```bash
-   node server.js
-   ```
-4. Abrir `http://localhost:3000` en el navegador.
-
-### Despliegue en Cloud (Vercel / Render / Railway / DonWeb Cloud)
-* **Vercel:** Importar el repositorio `alebati123/Donwebday` en Vercel, agregar la variable de entorno `OPENAI_API_KEY` y desplegar (detecta automáticamente `/api/chat.js` y `vercel.json`).
-* **DonWeb Cloud Server / Render / Railway:** Comando de inicio `node server.js` con variable de entorno `OPENAI_API_KEY`.
+* **🔥 Tablero Kanban de Cocina en Tiempo Real:** 
+  * Columnas: `📥 Nuevos Pedidos` ➔ `🔥 En Horno de Barro (430°C)` ➔ `🛵 Despachados / Listos`.
+  * Los pedidos confirmados por el cliente o armados por Don Vito entran de inmediato a la comanda de cocina.
+* **📦 ABM Completo de Carta y Precios:**
+  * Subida de nuevos platos con foto propia o preset fotográfico de alta calidad.
+  * Modificación de precios unitarios con guardado en 1 clic.
+  * Botones de ajuste masivo de precios por inflación (+10%, +15%, -5%).
+* **🟢 Control de Stock Vivo Sincronizado con el Prompt de la IA:**
+  * Al marcar un plato como **"🔴 AGOTADO"** en el panel, el catálogo que lee Don Vito se actualiza en el acto. Si un comensal intenta pedirlo por chat, la IA le avisa amablemente que se terminó la última tanda y le ofrece la mejor alternativa en stock.
+* **🔓 Gestión y Liberación de Mesas:** Control del salón y patio para ocupar o liberar mesas con un clic.
+* **📊 Métricas y KPIs del Turno:** Facturación en vivo, cantidad de pedidos procesados y mesas reservadas.
 
 ---
 
-## 🧪 5. Recorrido Sugerido para Evaluación del Jurado (2 Minutos)
-1. **Probar el Concierge IA por Presupuesto:** En la *Vista Cliente*, hacer clic en el chip `"💰 Presupuesto $28.000 (3 pers.)"` o escribir `"Somos 4 amigos, uno vegetariano, tenemos $35.000"`. Luego presionar el botón verde **"🛒 Agregar todo este combo al carrito"**.
-2. **Probar el Transformador de WhatsApp:** Ir a la pestaña `"📲 De WhatsApp a Pedido"`, elegir el *Ejemplo 1* y hacer clic en **"✨ Procesar con IA y Armar Pedido Automático"**.
-3. **Comprobar la Sincronización de Stock con la IA:** Ir a `"📊 Panel del Negocio"`, marcar la *Pizza Napolitana Especial* como **AGOTADO**, volver al chat y escribir `"Quiero pedir una pizza napolitana"`. La IA detectará en vivo el quiebre de stock y sugerirá una alternativa disponible.
-4. **Confirmar un Pedido:** En `"🛒 Mi Pedido"`, hacer clic en **"✅ Confirmar Pedido y Enviar a Cocina"** y observar cómo aparece inmediatamente en la columna `📥 Nuevos` del Tablero Kanban del comercio.
+## 🔒 5. Arquitectura Técnica y Seguridad de Credenciales
 
+* **Backend:** Servidor Node.js nativo (sin frameworks pesados), de arranque instantáneo y mínimo consumo de RAM (< 10 MB).
+* **Seguridad de la API Key:**
+  * La clave de OpenAI **NUNCA** se almacena en el frontend ni se commitea a Git.
+  * Excluida mediante `.gitignore` y administrada en variables de entorno seguras en el servidor (`.env`).
+  * Modal interno en `/admin.html` para actualizar la clave en caliente (`/api/config-key`).
+* **Resiliencia & Fallback:** Motor NLU heurístico local integrado que mantiene la atención de clientes y armado de pedidos activa incluso si se agota la cuota o falla la conexión con el proveedor de IA.
+
+---
+
+## 🚀 6. Despliegue en Servidor DonWeb Cloud
+
+El proyecto se encuentra instalado y corriendo de forma permanente en un Cloud Server de DonWeb:
+
+* **Sistema Operativo:** Ubuntu 24.04 LTS (Noble Numbat)
+* **Entorno de Ejecución:** Node.js v20.20.2 LTS
+* **Gestor de Proceso:** Servicio persistente `systemd` (`cantina.service`) con reinicio automático ante fallas o reinicios del servidor.
+* **Puerto:** Puerto 80 HTTP estándar (acceso directo sin puertos raros).
+* **Dirección IP Pública:** `201.32.132.185`
+
+---
+
+## 🧪 7. Guía Rápida para Evaluación del Jurado (Paso a Paso en 3 Minutos)
+
+1. **Abrir la Tienda del Cliente:** Entrar a [http://201.32.132.185/](http://201.32.132.185/) desde la computadora o el celular.
+2. **Consultar al Mozo Virtual (Don Vito):**
+   * En el chat, escribir: *"Somos 3 personas, qué nos recomendás para comer hoy?"* ➔ Don Vito sugerirá platos ideales para compartir **sin forzar una reserva prematura**.
+   * Escribir un pedido directo: *"Mandame 1 muzzarella al molde y 4 empanadas de carne a Bv. Oroño 650, soy Camila y pago con Mercado Pago"* ➔ Don Vito cargará los ítems al carrito y autocompletará la dirección y medio de pago.
+3. **Comprobar la Sincronización con Cocina:**
+   * Abrir en otra pestaña el panel administrativo: [http://201.32.132.185/admin.html](http://201.32.132.185/admin.html).
+   * Confirmar el pedido en el Carrito de la tienda del cliente y ver cómo aparece inmediatamente en la columna `📥 Nuevos` del Kanban de Cocina.
+   * Hacer clic en `🔥 Meter al Horno de Barro →` en el panel admin y observar cómo el estado cambia en la vista de seguimiento del cliente.
+4. **Comprobar el Quiebre de Stock con la IA:**
+   * En `/admin.html`, marcar la *Pizza Napolitana Especial* como **🔴 AGOTADO**.
+   * Volver al chat con Don Vito y pedir: *"Quiero pedir una pizza napolitana"* ➔ Don Vito avisará que se agotó en cocina y sugerirá otra pizza disponible.
+5. **Probar Reserva para Grupo Impar:**
+   * En el chat, escribir: *"Quiero reservar una mesa para 5 personas hoy a las 21:30 a nombre de Gonzalo"* ➔ Don Vito asignará una mesa cómoda con silla en cabecera y la marcará ocupada en el libro de reservas.
