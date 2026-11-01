@@ -18,14 +18,16 @@
         <span><strong>HORNO DE BARRO ENCENDIDO (430°C)</strong> • Av. Pellegrini 1540, Rosario</span>
       </div>
       <div class="ticker-right">
-        <span>🛵 Envío $1.800 (Bonificado +$35.000)</span>
+        <span>🛵 Envío $1.800 (Gratis +$35.000)</span>
         <span class="sep">|</span>
-        <span>🥡 Retiro en mostrador: <strong>10% OFF</strong> (20 min)</span>
+        <span>🥡 Retiro en local: <strong>10% OFF</strong></span>
+        <span class="sep">|</span>
+        <a href="admin.html" class="ticker-admin-link">👨‍🍳 Acceso Cocina / Admin →</a>
       </div>
     </div>
   </div>
 
-  <!-- CABECERA DE APLICACIÓN (LIMPIA Y ENFOCADA EN EL CLIENTE) -->
+  <!-- CABECERA DEL CLIENTE -->
   <header class="app-header">
     <div class="container header-inner">
       <div class="brand-lockup" onclick="navigateApp('menu')">
@@ -39,25 +41,18 @@
         </div>
       </div>
 
-      <!-- NAVEGACIÓN DE LA APLICACIÓN (DESKTOP) -->
+      <!-- NAVEGACIÓN DEL CLIENTE (DESKTOP) -->
       <nav class="app-nav-desktop" aria-label="Navegación principal">
         <button class="nav-item active" id="nav-menu" onclick="navigateApp('menu')">
           <span>🍽️ Carta & Pedido</span>
         </button>
         <button class="nav-item" id="nav-tables" onclick="navigateApp('tables')">
-          <span>🪑 Salón & Mesas</span>
+          <span>🪑 Reservar Mesa</span>
           <span class="nav-pill" id="tables-free-badge">8 libres</span>
         </button>
         <button class="nav-item" id="nav-tracker" onclick="navigateApp('tracker')">
-          <span>🛵 Mi Pedido</span>
-          <span class="nav-pill highlight hidden" id="active-order-pill">EN HORNO</span>
-        </button>
-        <button class="nav-item nav-pos" id="nav-admin" onclick="navigateApp('admin')">
-          <span>👨‍🍳 Panel Admin</span>
-          <span class="nav-pill pos-count" id="admin-orders-badge">3</span>
-        </button>
-        <button class="nav-item" id="nav-report" onclick="navigateApp('report')">
-          <span>📋 Informe</span>
+          <span>🛵 Seguir Mi Pedido</span>
+          <span class="nav-pill highlight hidden" id="active-order-pill">EN CURSO</span>
         </button>
       </nav>
 
@@ -71,16 +66,13 @@
     </div>
   </header>
 
-  <!-- SELECTOR RÁPIDO MÓVIL / TABLET EN PANTALLA PRINCIPAL -->
+  <!-- SELECTOR RÁPIDO MÓVIL / TABLET (3 PESTAÑAS QUE CALZAN 100% EN PANTALLA) -->
   <div class="mobile-subview-bar" id="mobile-subview-bar">
     <button class="msub-btn active" id="msub-catalog" onclick="setMobileMenuSubview('catalog')">
-      🍕 Ver Carta (<span id="msub-dishes-count">16</span>)
+      🍕 Carta (<span id="msub-dishes-count">16</span>)
     </button>
     <button class="msub-btn" id="msub-chat" onclick="setMobileMenuSubview('chat')">
       💬 Mozo Virtual
-    </button>
-    <button class="msub-btn" id="msub-whatsapp" onclick="setMobileMenuSubview('whatsapp')">
-      📲 Pegar WhatsApp
     </button>
     <button class="msub-btn" id="msub-cart" onclick="setMobileMenuSubview('cart')">
       🛒 Carrito (<span id="msub-cart-count">0</span>)
@@ -88,29 +80,29 @@
   </div>
 
   <!-- ======================================================================= -->
-  <!-- PANTALLA 1: CARTA INTERACTIVA + MOSTRADOR CONSERJE IA + CARRITO         -->
+  <!-- PANTALLA 1: CARTA INTERACTIVA + MOZO VIRTUAL IA + CARRITO               -->
   <!-- ======================================================================= -->
   <main id="screen-menu" class="app-screen active">
     <div class="container app-layout">
-      <!-- COLUMNA PRINCIPAL: CARTA FOTOGRÁFICA DE BODEGÓN -->
+      <!-- COLUMNA PRINCIPAL: CARTA FOTOGRÁFICA -->
       <div class="menu-main-col" id="menu-main-col">
-        <!-- Banner Destacado Fotográfico Compacto -->
+        <!-- Banners Destacados -->
         <div class="featured-strip">
-          <div class="featured-card" onclick="triggerQuickPrompt('Somos 4 amigos, hoy tenemos ganas de pizza al horno de barro y empanadas para picar (uno es vegetariano). ¿Qué nos recomendás pedir?')">
+          <div class="featured-card" onclick="triggerQuickPrompt('Somos 4 amigos, hoy tenemos ganas de pizza al horno de barro y empanadas para compartir (uno es vegetariano). ¿Qué nos recomendás pedir?')">
             <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="Pizza al horno de barro" loading="lazy" />
             <div class="featured-overlay">
               <span class="featured-tag">✨ Recomendación del Mozo</span>
               <h3>¿No saben qué pedir para compartir?</h3>
-              <p>Contale a Don Vito qué tienen ganas de comer hoy y cuántos son: te sugiere la combinación ideal →</p>
+              <p>Contale a Don Vito qué tienen ganas de comer hoy y cuántos son: te arma la sugerencia ideal →</p>
             </div>
           </div>
 
-          <div class="featured-card" onclick="openWhatsAppParserView()">
-            <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80" alt="Milanesa de bodegón" loading="lazy" />
+          <div class="featured-card" onclick="navigateApp('tables')">
+            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" alt="Salón y patio del bodegón" loading="lazy" />
             <div class="featured-overlay">
-              <span class="featured-tag">📲 Chau demoras de WhatsApp</span>
-              <h3>Pegá tu mensaje o audio y armamos el carrito</h3>
-              <p>Escribí todo tu pedido de corrido como en WhatsApp y lo cargamos listo en 2 segundos →</p>
+              <span class="featured-tag">🪑 Salón & Patio Cervecero</span>
+              <h3>¿Vienen a comer a la Cantina hoy?</h3>
+              <p>Elegí tu mesa en el plano en vivo (mesas flexibles para 2, 3, 5, 7 o grupos grandes) →</p>
             </div>
           </div>
         </div>
@@ -152,18 +144,15 @@
         <div class="dishes-grid" id="catalog-grid"></div>
       </div>
 
-      <!-- COLUMNA LATERAL DERECHA: MOSTRADOR IA ("DON VITO") + CARRITO -->
+      <!-- COLUMNA LATERAL DERECHA: MOZO VIRTUAL ("DON VITO") + MI CARRITO -->
       <aside class="side-dock" id="side-dock">
         <div class="dock-card">
-          <div class="dock-tabs">
+          <div class="dock-tabs dock-tabs-2">
             <button class="dock-tab active" id="rtab-chat" onclick="switchRightTab('chat')">
-              💬 Don Vito (Mozo)
-            </button>
-            <button class="dock-tab" id="rtab-whatsapp" onclick="switchRightTab('whatsapp')">
-              📲 Pedido Rápido
+              💬 Don Vito (Mozo Virtual)
             </button>
             <button class="dock-tab" id="rtab-cart" onclick="switchRightTab('cart')">
-              🛒 Carrito (<span id="dock-cart-count">0</span>)
+              🛒 Mi Carrito (<span id="dock-cart-count">0</span>)
             </button>
           </div>
 
@@ -176,21 +165,21 @@
                 class="concierge-avatar"
               />
               <div>
-                <strong>Don Vito • Mozo & Conserje de la Cantina</strong>
-                <p>Te recomiendo platos, armo tu carrito o reservo tu mesa al instante</p>
+                <strong>Don Vito • Mozo de la Cantina</strong>
+                <p>Pedime recomendaciones, dictame tu pedido o reservá tu mesa</p>
               </div>
             </div>
 
             <div class="chat-stream" id="chat-messages"></div>
 
             <div class="quick-prompts-bar">
-              <span class="qp-title">¿De qué tienen ganas hoy? Tocá para consultar:</span>
+              <span class="qp-title">Tocá una opción rápida o escribí abajo:</span>
               <div class="qp-list">
                 <button class="qp-btn" onclick="triggerQuickPrompt('Hoy tenemos ganas de comer una buena pizza rellena y empanadas para compartir entre 3 personas, ¿qué nos sugerís?')">
-                  🍕 Noche de pizza y empanadas (3 pers.)
+                  🍕 Sugerencia para compartir (3 pers.)
                 </button>
                 <button class="qp-btn" onclick="triggerQuickPrompt('Mandame 1 fugazzeta rellena, 4 empanadas de carne a cuchillo y 1 vermut con soda a Rioja 1850')">
-                  🛵 Armar pedido directo a domicilio
+                  🛵 Cargar pedido directo al carrito
                 </button>
                 <button class="qp-btn" onclick="triggerQuickPrompt('¿Qué platos ricos tienen para alguien celíaco (Sin TACC) o vegetariano?')">
                   🌾 Opciones Sin TACC / Veggie
@@ -205,66 +194,14 @@
               <input
                 type="text"
                 id="chat-input"
-                placeholder="Contame qué tenés ganas de comer hoy o pedí tu mesa..."
+                placeholder="Contame qué tenés ganas de comer o dictame tu pedido..."
                 autocomplete="off"
               />
               <button type="submit" class="btn-composer-send" id="btn-send-chat">Enviar</button>
             </form>
           </div>
 
-          <!-- PESTAÑA 2: INTERPRETADOR DE MENSAJES / AUDIOS DE WHATSAPP -->
-          <div id="rpanel-whatsapp" class="dock-panel">
-            <div class="wa-tool-container">
-              <div class="wa-explainer">
-                <span class="wa-badge">PEDIDO RÁPIDO SIN ESPERAS</span>
-                <h4>Convertidor de Audio o Mensaje a Carrito</h4>
-                <p>
-                  Pegá tu pedido escrito como en WhatsApp o probá el simulador de audio: identificamos cada plato, cantidad, dirección y forma de pago y los sumamos directo a tu carrito.
-                </p>
-              </div>
-
-              <div class="wa-voice-card">
-                <div class="voice-top">
-                  <span class="voice-mic">🎙️ Audio de WhatsApp recibido (0:18)</span>
-                  <button type="button" class="btn-play-voice" onclick="simulateVoiceTranscription()">
-                    ▶ Transcribir y Cargar al Carrito
-                  </button>
-                </div>
-                <div class="voice-waveform">
-                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-                </div>
-              </div>
-
-              <div class="wa-presets">
-                <span class="qp-title">O probá con estos pedidos de ejemplo:</span>
-                <div class="preset-btns">
-                  <button type="button" class="preset-btn" onclick="loadWhatsAppSample(1)">
-                    📩 Ejemplo 1: Pedido familiar con envío a Bv. Oroño
-                  </button>
-                  <button type="button" class="preset-btn" onclick="loadWhatsAppSample(2)">
-                    📩 Ejemplo 2: Juntada con Milanesa XXL y Pizza
-                  </button>
-                  <button type="button" class="preset-btn" onclick="loadWhatsAppSample(3)">
-                    📩 Ejemplo 3: Retiro por el local con menú Sin TACC
-                  </button>
-                </div>
-              </div>
-
-              <textarea
-                id="wa-raw-input"
-                rows="4"
-                placeholder="Escribí o pegá acá tu pedido completo..."
-              ></textarea>
-
-              <button type="button" class="btn-terracotta btn-block" id="btn-parse-wa" onclick="processWhatsAppText()">
-                ⚡ Cargar Platos Automáticamente al Carrito
-              </button>
-
-              <div id="wa-parse-result" class="wa-result-card hidden"></div>
-            </div>
-          </div>
-
-          <!-- PESTAÑA 3: MI CARRITO / PEDIDO -->
+          <!-- PESTAÑA 2: MI CARRITO / PEDIDO -->
           <div id="rpanel-cart" class="dock-panel">
             <div class="thermal-ticket-wrap">
               <div class="thermal-ticket">
@@ -341,7 +278,6 @@
         </div>
       </div>
 
-      <!-- Aviso explicativo de flexibilidad de mesas (3, 5, 7 y grupos grandes) -->
       <div class="seating-flex-banner">
         <div class="flex-item">
           <strong>👥 ¿Son 3, 5 o 7 personas?</strong>
@@ -445,177 +381,7 @@
   </main>
 
   <!-- ======================================================================= -->
-  <!-- PANTALLA 4: PANEL DE ADMINISTRACIÓN, GESTIÓN DE CARTA Y COCINA          -->
-  <!-- ======================================================================= -->
-  <main id="screen-admin" class="app-screen">
-    <div class="container section-pad">
-      <div class="pos-header">
-        <div>
-          <span class="eyebrow-tag">👨‍🍳 SISTEMA DE GESTIÓN & BACKOFFICE DEL COMERCIO</span>
-          <h2>Administración de Carta, Precios, Stock y Pedidos</h2>
-          <p class="sub-copy">
-            Desde acá el encargado sube nuevos platos, actualiza precios, controla el stock y despacha los pedidos. Todo cambio impacta en vivo en la tienda y en el asistente.
-          </p>
-        </div>
-        <div class="pos-actions">
-          <button class="btn-terracotta" onclick="openProductEditorModal()">
-            ➕ Subir Nuevo Plato / Producto
-          </button>
-          <button class="btn-outline-dark" onclick="simulateIncomingWhatsAppOrder()">
-            ⚡ Simular Pedido Entrante
-          </button>
-          <button class="btn-outline-dark" onclick="openApiKeyModal()" title="Configurar API Key de OpenAI">
-            🔑 Configurar API IA
-          </button>
-        </div>
-      </div>
-
-      <!-- KPIs de Negocio -->
-      <div class="pos-metrics-grid">
-        <div class="pos-metric-box">
-          <span class="pm-title">Pedidos Procesados Hoy</span>
-          <strong class="pm-val" id="kpi-orders-count">3</strong>
-          <span class="pm-sub">100% automatizados sin esperas</span>
-        </div>
-        <div class="pos-metric-box">
-          <span class="pm-title">Recaudación del Turno</span>
-          <strong class="pm-val" id="kpi-revenue">$94.600</strong>
-          <span class="pm-sub">+28% conversión vs. WhatsApp manual</span>
-        </div>
-        <div class="pos-metric-box">
-          <span class="pm-title">Platos Activos en Carta</span>
-          <strong class="pm-val" id="kpi-catalog-count">16</strong>
-          <span class="pm-sub">Sincronizados en tiempo real</span>
-        </div>
-        <div class="pos-metric-box">
-          <span class="pm-title">Mesas Reservadas Hoy</span>
-          <strong class="pm-val" id="kpi-reservations-count">2</strong>
-          <span class="pm-sub">Sincronizadas con plano de salón</span>
-        </div>
-      </div>
-
-      <!-- SUB-NAVEGACIÓN DEL PANEL DE ADMIN -->
-      <div class="admin-subtabs">
-        <button class="adm-subtab active" id="admtab-catalog" onclick="switchAdminSubtab('catalog')">
-          🍕 Gestión de Productos, Precios y Stock (ABM)
-        </button>
-        <button class="adm-subtab" id="admtab-kanban" onclick="switchAdminSubtab('kanban')">
-          🔥 Pedidos en Cocina en Vivo
-        </button>
-        <button class="adm-subtab" id="admtab-reservations" onclick="switchAdminSubtab('reservations')">
-          🪑 Libro de Reservas de Mesas
-        </button>
-      </div>
-
-      <!-- VISTA ADMIN 1: GESTOR DE PRODUCTOS, PRECIOS Y STOCK (ABM COMPLETO) -->
-      <div id="admview-catalog" class="adm-view active">
-        <div class="pos-card">
-          <div class="admin-catalog-toolbar">
-            <div>
-              <h3>Catálogo de Productos y Editor de Precios en Vivo</h3>
-              <p class="sub-copy">
-                Modificá cualquier precio directamente en la casilla y tocá <strong>Guardar</strong>, agregá un producto nuevo con foto o aplicá un ajuste porcentual a toda la carta.
-              </p>
-            </div>
-            <div class="bulk-price-actions">
-              <button class="btn-outline-dark btn-sm" onclick="openProductEditorModal()">
-                + Nuevo Producto
-              </button>
-              <button class="btn-outline-dark btn-sm" onclick="applyBulkPriceChange(10)" title="Aumentar todos los precios un 10%">
-                📈 +10% Precios
-              </button>
-              <button class="btn-outline-dark btn-sm" onclick="applyBulkPriceChange(-10)" title="Aplicar 10% de descuento general">
-                🏷️ -10% Promo
-              </button>
-              <button class="btn-outline-dark btn-sm" onclick="resetCatalogToDefaults()" title="Restaurar carta original">
-                ↺ Restaurar Carta Original
-              </button>
-            </div>
-          </div>
-
-          <div class="admin-products-list" id="admin-stock-list"></div>
-        </div>
-      </div>
-
-      <!-- VISTA ADMIN 2: PEDIDOS EN COCINA -->
-      <div id="admview-kanban" class="adm-view">
-        <div class="pos-kanban">
-          <div class="pos-col">
-            <div class="pos-col-head head-new">
-              <span>📥 Nuevos Pedidos Recibidos</span>
-              <strong id="count-new">0</strong>
-            </div>
-            <div class="pos-col-body" id="kanban-new"></div>
-          </div>
-
-          <div class="pos-col">
-            <div class="pos-col-head head-cooking">
-              <span>🔥 En Horno de Barro / Cocina</span>
-              <strong id="count-cooking">0</strong>
-            </div>
-            <div class="pos-col-body" id="kanban-cooking"></div>
-          </div>
-
-          <div class="pos-col">
-            <div class="pos-col-head head-ready">
-              <span>🛵 En Reparto / Listos</span>
-              <strong id="count-ready">0</strong>
-            </div>
-            <div class="pos-col-body" id="kanban-ready"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- VISTA ADMIN 3: LIBRO DE RESERVAS -->
-      <div id="admview-reservations" class="adm-view">
-        <div class="pos-card">
-          <div class="pos-card-head">
-            <h3>🪑 Libro de Reservas del Turno Noche</h3>
-            <p class="sub-copy">Reservas tomadas automáticamente desde el chat y el plano interactivo de mesas (con detalle de sillas extra o unión de mesas).</p>
-          </div>
-          <div class="stock-table" id="admin-reservations-list"></div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- ======================================================================= -->
-  <!-- PANTALLA 5: INFORME TÉCNICO Y DE NEGOCIO (HACKATÓN DONWEB DAY)          -->
-  <!-- ======================================================================= -->
-  <main id="screen-report" class="app-screen">
-    <div class="container section-pad">
-      <article class="editorial-report">
-        <span class="eyebrow-tag">🏆 HACKATÓN DONWEB DAY ROSARIO 2026 • "DEL PROBLEMA AL SERVIDOR"</span>
-        <h2>Informe de Solución: Digitalización con IA para Gastronomía Local</h2>
-        <p class="lead-paragraph">
-          <strong>La Cantina de Don Brasa</strong> demuestra cómo un comercio tradicional rosarino pasa de perder ventas por atender WhatsApp y teléfono a mano, a operar con una aplicación web integral donde la Inteligencia Artificial conversa, recomienda según los gustos de los comensales, interpreta audios/mensajes, toma reservas modulares en plano y envía los pedidos directo a la cocina.
-        </p>
-
-        <div class="report-columns">
-          <div class="report-block">
-            <h3>1. El Cuello de Botella Real</h3>
-            <ul>
-              <li><strong>Saturación en franja horaria crítica:</strong> El 80% de la facturación de una pizzería/bodegón entra entre las 20:30 y las 22:30 hs. Responder a mano "¿qué tenés?", "¿cuánto sale el envío?" y escuchar audios largos de WhatsApp genera demoras de hasta 40 minutos.</li>
-              <li><strong>Fuga de clientes y comisiones abusivas:</strong> Ante la demora en WhatsApp, el cliente abandona la compra o pide por apps de terceros que retienen entre el 25% y el 35% de margen al comercio local.</li>
-              <li><strong>Errores humanos y quiebres de stock:</strong> Se anotan mal las direcciones, se olvidan aclaraciones de celíacos y se cobran platos que acaban de agotarse en la cocina.</li>
-            </ul>
-          </div>
-
-          <div class="report-block">
-            <h3>2. Diferenciales de Nuestra Solución Web + IA</h3>
-            <ul>
-              <li><strong>Conserje "Don Vito" con Salidas Estructuradas (OpenAI JSON Mode):</strong> No es un chatbot pasivo. Ejecuta acciones sobre el carrito (<code>autoCartAdd</code>), sugiere combinaciones según los gustos y antojos del grupo (<code>suggestedItems</code>) y gestiona reservas inteligentes (<code>reservation</code>).</li>
-              <li><strong>Gestión Inteligente de Mesas Impares (3, 5, 7) y Grupos Grandes:</strong> El sistema asigna automáticamente mesas donde el grupo esté cómodo, permitiendo agregar sillas en cabecera o unir mesas contiguas.</li>
-              <li><strong>Panel Admin con ABM de Productos y Precios Sincronizado con la IA:</strong> El comerciante puede crear nuevos platos con foto, modificar precios o pausar stock en tiempo real, actualizando al instante el contexto del modelo de IA.</li>
-            </ul>
-          </div>
-        </div>
-      </article>
-    </div>
-  </main>
-
-  <!-- ======================================================================= -->
-  <!-- FOOTER EDITORIAL COMPLETO (RESPONSIVE)                                  -->
+  <!-- FOOTER EDITORIAL COMPLETO (CON ACCESO AL PANEL ADMIN SEPARADO)          -->
   <!-- ======================================================================= -->
   <footer class="site-footer">
     <div class="container footer-grid">
@@ -651,26 +417,24 @@
       </div>
 
       <div class="footer-col">
-        <h4>Secciones de la Cantina</h4>
+        <h4>Secciones para Clientes</h4>
         <ul class="footer-links">
           <li><button onclick="navigateApp('menu')">🍽️ Carta Digital & Carrito</button></li>
           <li><button onclick="openMobileAssistant()">💬 Consultar a Don Vito (Mozo Virtual)</button></li>
-          <li><button onclick="openWhatsAppParserView()">📲 Cargar Pedido Rápido desde Texto/Audio</button></li>
           <li><button onclick="navigateApp('tables')">🪑 Plano de Salón y Reserva de Mesas</button></li>
           <li><button onclick="navigateApp('tracker')">🛵 Seguimiento de Mi Pedido en Vivo</button></li>
-          <li><button onclick="navigateApp('admin')">👨‍🍳 Acceso Encargado / Administración</button></li>
         </ul>
       </div>
 
       <div class="footer-col">
-        <h4>Hackatón DonWeb Day 2026</h4>
+        <h4>Gestión del Comercio</h4>
         <p class="footer-desc">
-          Proyecto desarrollado bajo la consigna <em>"Del problema al servidor"</em> en la Tecnoteca de Rosario. Resuelve la pérdida de ventas por atención manual en comercios locales.
+          Acceso exclusivo para personal de cocina y encargados (tablero de pedidos en horno, edición de precios, alta de platos y libro de reservas).
         </p>
         <div class="footer-cta-box">
-          <button class="btn-terracotta btn-sm btn-block" onclick="navigateApp('admin')">
-            ⚙️ Panel Admin (Subir Platos / Editar Precios)
-          </button>
+          <a href="admin.html" class="btn-terracotta btn-sm btn-block" style="text-align:center; text-decoration:none; display:block;">
+            👨‍🍳 Abrir Panel Admin y Cocina (`admin.html`)
+          </a>
           <a href="https://github.com/alebati123/Donwebday" target="_blank" rel="noopener noreferrer" class="footer-gh-link">
             📦 Ver Repositorio e Informe en GitHub →
           </a>
@@ -680,13 +444,13 @@
 
     <div class="footer-bottom">
       <div class="container footer-bottom-inner">
-        <span>© 2026 La Cantina de Don Brasa • Rosario, Argentina. Todos los derechos reservados.</span>
+        <span>© 2026 La Cantina de Don Brasa • Rosario, Argentina.</span>
         <span>Desarrollado para <strong>DonWeb Day Rosario 2026</strong></span>
       </div>
     </div>
   </footer>
 
-  <!-- BARRA DE NAVEGACIÓN INFERIOR PARA CELULARES (MOBILE APP BAR) -->
+  <!-- BARRA DE NAVEGACIÓN INFERIOR PARA CELULARES (4 ACCIONES DEL CLIENTE) -->
   <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
     <button class="mnav-btn active" id="mnav-menu" onclick="navigateApp('menu')">
       <span class="mnav-icon">🍽️</span>
@@ -704,10 +468,6 @@
       <span class="mnav-icon">🛵</span>
       <span class="mnav-label">Mi Pedido</span>
     </button>
-    <button class="mnav-btn" id="mnav-admin" onclick="navigateApp('admin')">
-      <span class="mnav-icon">👨‍🍳</span>
-      <span class="mnav-label">Admin</span>
-    </button>
   </nav>
 
   <!-- MODAL DE PERSONALIZACIÓN DE PLATO (CLIENTE) -->
@@ -715,116 +475,6 @@
     <div class="modal-card dish-modal-card" onclick="event.stopPropagation()">
       <button class="modal-close-x" onclick="closeDishModal()">✕</button>
       <div id="dish-modal-body"></div>
-    </div>
-  </div>
-
-  <!-- MODAL ADMIN: CREAR O EDITAR PRODUCTO / PRECIO / FOTO -->
-  <div id="product-editor-modal" class="modal-overlay hidden" onclick="closeProductEditorModal()">
-    <div class="modal-card product-editor-card" onclick="event.stopPropagation()">
-      <button class="modal-close-x" onclick="closeProductEditorModal()">✕</button>
-      <span class="eyebrow-tag">👨‍🍳 ADMINISTRACIÓN DE CARTA EN VIVO</span>
-      <h3 id="prod-editor-title">Subir Nuevo Plato a la Carta</h3>
-
-      <form onsubmit="saveProductFromModal(event)" class="admin-prod-form">
-        <input type="hidden" id="edit-prod-id" value="" />
-
-        <div class="form-row-split">
-          <div class="form-group">
-            <label>Nombre del Plato / Producto *</label>
-            <input type="text" id="edit-prod-name" required placeholder="Ej: Pizza Calabresa a la Piedra" />
-          </div>
-          <div class="form-group">
-            <label>Rubro / Categoría *</label>
-            <select id="edit-prod-category">
-              <option value="Pizzas">🍕 Pizzas al Molde & Piedra</option>
-              <option value="Empanadas">🥟 Empanadas al Barro</option>
-              <option value="Bodegón">🥩 Platos de Bodegón</option>
-              <option value="Bebidas y Postres">🍷 Vermut, Birras & Postres</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row-split">
-          <div class="form-group">
-            <label>Precio de Venta ($ ARS) *</label>
-            <input type="number" id="edit-prod-price" required min="100" step="50" placeholder="Ej: 14500" />
-          </div>
-          <div class="form-group">
-            <label>Estado Inicial en Cocina</label>
-            <select id="edit-prod-stock">
-              <option value="true">🟢 Disponible en Stock</option>
-              <option value="false">🔴 Agotado Temporalmente</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Descripción e Ingredientes *</label>
-          <input type="text" id="edit-prod-desc" required placeholder="Ej: Longaniza calabresa artesanal, muzzarella y aceitunas negras..." />
-        </div>
-
-        <div class="form-group">
-          <label>Fotografía del Plato (URL o subir archivo desde tu dispositivo)</label>
-          <input type="text" id="edit-prod-image" placeholder="https://images.unsplash.com/..." />
-          <div class="photo-quick-tools">
-            <label class="btn-upload-file">
-              📷 Subir foto desde mi PC/Celular
-              <input type="file" accept="image/*" onchange="handleLocalImageUpload(event)" style="display:none;" />
-            </label>
-            <button type="button" class="btn-preset-img" onclick="setPresetDishPhoto('pizza')">🍕 Foto Pizza</button>
-            <button type="button" class="btn-preset-img" onclick="setPresetDishPhoto('empanada')">🥟 Foto Empanada</button>
-            <button type="button" class="btn-preset-img" onclick="setPresetDishPhoto('bodegon')">🥩 Foto Bodegón</button>
-            <button type="button" class="btn-preset-img" onclick="setPresetDishPhoto('bebida')">🍷 Foto Bebida</button>
-          </div>
-        </div>
-
-        <div class="diet-filters" style="margin-top:4px;">
-          <label class="diet-check">
-            <input type="checkbox" id="edit-tag-popular" />
-            <span>🔥 Destacado / Clásico</span>
-          </label>
-          <label class="diet-check">
-            <input type="checkbox" id="edit-tag-sintacc" />
-            <span>🌾 Apto Sin TACC</span>
-          </label>
-          <label class="diet-check">
-            <input type="checkbox" id="edit-tag-veggie" />
-            <span>🌿 Vegetariano</span>
-          </label>
-        </div>
-
-        <div class="modal-footer-btns" style="margin-top:10px;">
-          <button type="button" class="btn-outline-dark" onclick="closeProductEditorModal()">Cancelar</button>
-          <button type="submit" class="btn-terracotta">💾 Guardar en la Carta</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL DE CONFIGURACIÓN SEGURA DE OPENAI API KEY (SOLO DESDE ADMIN) -->
-  <div id="apikey-modal" class="modal-overlay hidden" onclick="closeApiKeyModal()">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <button class="modal-close-x" onclick="closeApiKeyModal()">✕</button>
-      <h3>🔑 Conexión con OpenAI API (Panel Admin)</h3>
-      <p class="sub-copy">
-        El servidor ya cuenta con la clave configurada en <code>.env</code>. Si necesitás reemplazarla en caliente, podés ingresarla acá.
-      </p>
-      <div class="form-group">
-        <label>OpenAI API Key (<code>sk-...</code>)</label>
-        <input type="password" id="modal-apikey-input" placeholder="sk-proj-..." autocomplete="off" />
-      </div>
-      <div class="form-group">
-        <label>Modelo de OpenAI</label>
-        <select id="modal-model-select">
-          <option value="gpt-4o-mini">gpt-4o-mini</option>
-          <option value="gpt-4o">gpt-4o</option>
-        </select>
-      </div>
-      <div id="apikey-status-msg" class="status-feedback"></div>
-      <div class="modal-footer-btns">
-        <button class="btn-outline-dark" onclick="closeApiKeyModal()">Cerrar</button>
-        <button class="btn-terracotta" onclick="saveApiKeyConfig()">Guardar</button>
-      </div>
     </div>
   </div>
 

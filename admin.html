@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Panel Admin & Cocina — La Cantina de Don Brasa | Rosario</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-page-body">
+  <!-- CINTA SUPERIOR DE MODO ADMINISTRADOR -->
+  <div class="top-ticker admin-ticker">
+    <div class="container ticker-inner">
+      <div class="ticker-left">
+        <span class="oven-live-dot"></span>
+        <span><strong>PANEL INTERNO DE GESTIÓN Y COCINA</strong> • Sincronizado en tiempo real con la Tienda Web y el Mozo IA</span>
+      </div>
+      <div class="ticker-right">
+        <a href="index.html" class="ticker-admin-link">🍽️ Ir a la Vista del Cliente (Tienda) →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CABECERA DEL PANEL ADMINISTRADOR -->
+  <header class="app-header">
+    <div class="container header-inner">
+      <div class="brand-lockup" onclick="window.location.href='index.html'">
+        <div class="brand-stamp">
+          <span class="stamp-year">ADMIN</span>
+          <span class="stamp-initials">DB</span>
+        </div>
+        <div class="brand-text">
+          <h1>Panel Admin & Cocina — Don Brasa</h1>
+          <p>Gestión de Pedidos en Horno, Precios, Alta de Platos y Reservas</p>
+        </div>
+      </div>
+
+      <!-- NAVEGACIÓN DE SECCIONES DEL ADMIN -->
+      <nav class="app-nav-desktop" aria-label="Navegación de administración">
+        <button class="nav-item active" id="admtab-kanban" onclick="switchAdminSubtab('kanban')">
+          <span>🔥 Pedidos en Cocina</span>
+          <span class="nav-pill" id="admin-orders-badge">3</span>
+        </button>
+        <button class="nav-item" id="admtab-catalog" onclick="switchAdminSubtab('catalog')">
+          <span>🍕 Productos, Precios y Stock</span>
+        </button>
+        <button class="nav-item" id="admtab-reservations" onclick="switchAdminSubtab('reservations')">
+          <span>🪑 Reservas & Mesas</span>
+        </button>
+        <button class="nav-item" id="admtab-report" onclick="switchAdminSubtab('report')">
+          <span>📋 Informe Hackatón</span>
+        </button>
+      </nav>
+
+      <div class="header-controls">
+        <a href="index.html" class="btn-outline-dark btn-sm" style="text-decoration:none;">
+          ⬅ Vista Cliente
+        </a>
+        <button class="btn-terracotta btn-sm" onclick="openProductEditorModal()">
+          + Subir Plato
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- SUB-BARRA DE NAVEGACIÓN MÓVIL PARA EL ADMIN -->
+  <div class="mobile-subview-bar show-on-menu">
+    <button class="msub-btn active" id="madm-kanban" onclick="switchAdminSubtab('kanban')">
+      🔥 Cocina
+    </button>
+    <button class="msub-btn" id="madm-catalog" onclick="switchAdminSubtab('catalog')">
+      🍕 Precios/Stock
+    </button>
+    <button class="msub-btn" id="madm-reservations" onclick="switchAdminSubtab('reservations')">
+      🪑 Reservas
+    </button>
+    <button class="msub-btn" id="madm-report" onclick="switchAdminSubtab('report')">
+      📋 Informe
+    </button>
+  </div>
+
+  <main class="container section-pad" style="padding-bottom: 60px;">
+    <!-- KPIs Operativos en Vivo -->
+    <div class="pos-metrics-grid">
+      <div class="pos-metric-box">
+        <span class="pm-title">Pedidos del Turno</span>
+        <strong class="pm-val" id="kpi-orders-count">3</strong>
+        <span class="pm-sub">Tomados sin demoras de WhatsApp</span>
+      </div>
+      <div class="pos-metric-box">
+        <span class="pm-title">Facturación Acumulada</span>
+        <strong class="pm-val" id="kpi-revenue">$94.600</strong>
+        <span class="pm-sub">Actualizada en tiempo real</span>
+      </div>
+      <div class="pos-metric-box">
+        <span class="pm-title">Platos en Carta</span>
+        <strong class="pm-val" id="kpi-catalog-count">16</strong>
+        <span class="pm-sub">Sincronizados con el asistente IA</span>
+      </div>
+      <div class="pos-metric-box">
+        <span class="pm-title">Reservas de Salón</span>
+        <strong class="pm-val" id="kpi-reservations-count">2</strong>
+        <span class="pm-sub">Asignación modular activa</span>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- SECCIÓN ADMIN 1: TABLERO DE PEDIDOS EN COCINA (KANBAN)              -->
+    <!-- =================================================================== -->
+    <section id="admview-kanban" class="adm-view active">
+      <div class="pos-header">
+        <div>
+          <span class="eyebrow-tag">🔥 EXPEDICIÓN Y HORNO DE BARRO EN TIEMPO REAL</span>
+          <h2>Tablero de Pedidos en Cocina</h2>
+          <p class="sub-copy">
+            Cada pedido confirmado por un cliente en la tienda o mediante el Mozo Virtual ingresa directamente acá. Avanzá su estado con un clic para actualizar el seguimiento del cliente.
+          </p>
+        </div>
+        <div class="pos-actions">
+          <button class="btn-outline-dark" onclick="simulateIncomingWhatsAppOrder()">
+            ⚡ Simular Nuevo Pedido Entrante
+          </button>
+        </div>
+      </div>
+
+      <div class="pos-kanban">
+        <div class="pos-col">
+          <div class="pos-col-head head-new">
+            <span>📥 Nuevos Pedidos Recibidos</span>
+            <strong id="count-new">0</strong>
+          </div>
+          <div class="pos-col-body" id="kanban-new"></div>
+        </div>
+
+        <div class="pos-col">
+          <div class="pos-col-head head-cooking">
+            <span>🔥 En Horno de Barro / Cocina</span>
+            <strong id="count-cooking">0</strong>
+          </div>
+          <div class="pos-col-body" id="kanban-cooking"></div>
+        </div>
+
+        <div class="pos-col">
+          <div class="pos-col-head head-ready">
+            <span>🛵 En Reparto / Listos en Mostrador</span>
+            <strong id="count-ready">0</strong>
+          </div>
+          <div class="pos-col-body" id="kanban-ready"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- SECCIÓN ADMIN 2: ABM DE PRODUCTOS, PRECIOS Y CONTROL DE STOCK       -->
+    <!-- =================================================================== -->
+    <section id="admview-catalog" class="adm-view">
+      <div class="pos-card">
+        <div class="admin-catalog-toolbar">
+          <div>
+            <span class="eyebrow-tag">🍕 GESTIÓN DE CARTA E INVENTARIO</span>
+            <h3>Subir Productos, Modificar Precios y Controlar Stock</h3>
+            <p class="sub-copy">
+              Cualquier cambio de precio, plato nuevo o producto agotado impacta de inmediato en la tienda del cliente y en las respuestas del Mozo Virtual IA.
+            </p>
+          </div>
+          <div class="bulk-price-actions">
+            <button class="btn-terracotta btn-sm" onclick="openProductEditorModal()">
+              ➕ Subir Nuevo Producto
+            </button>
+            <button class="btn-outline-dark btn-sm" onclick="applyBulkPriceChange(10)">
+              📈 +10% Precios
+            </button>
+            <button class="btn-outline-dark btn-sm" onclick="applyBulkPriceChange(-10)">
+              🏷️ -10% Promo
+            </button>
+            <button class="btn-outline-dark btn-sm" onclick="resetCatalogToDefaults()">
+              ↺ Restaurar Carta Original
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-products-list" id="admin-stock-list"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- SECCIÓN ADMIN 3: LIBRO DE RESERVAS Y CONTROL DE MESAS               -->
+    <!-- =================================================================== -->
+    <section id="admview-reservations" class="adm-view">
+      <div class="pos-card">
+        <div class="admin-catalog-toolbar">
+          <div>
+            <span class="eyebrow-tag">🪑 RECEPCIÓN Y SALÓN</span>
+            <h3>Libro de Reservas y Estado de Mesas</h3>
+            <p class="sub-copy">
+              Listado de reservas confirmadas con su detalle de armado (sillas extra en cabecera para 3, 5 o 7 personas, o unión de mesas) y control para liberar mesas.
+            </p>
+          </div>
+        </div>
+
+        <h4 style="font-family:var(--font-serif); color:var(--green-bodegon); margin-bottom:10px;">Reservas Registradas Hoy</h4>
+        <div class="stock-table" id="admin-reservations-list" style="margin-bottom:24px;"></div>
+
+        <h4 style="font-family:var(--font-serif); color:var(--green-bodegon); margin-bottom:10px;">Estado de Mesas del Salón y Patio (Click para alternar Libre / Ocupada)</h4>
+        <div class="stock-table" id="admin-tables-control-list"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- SECCIÓN ADMIN 4: INFORME HACKATÓN Y CONFIGURACIÓN DE API            -->
+    <!-- =================================================================== -->
+    <section id="admview-report" class="adm-view">
+      <article class="editorial-report">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+          <div>
+            <span class="eyebrow-tag">🏆 HACKATÓN DONWEB DAY ROSARIO 2026 • "DEL PROBLEMA AL SERVIDOR"</span>
+            <h2>Informe Técnico y Funcional del Proyecto</h2>
+          </div>
+          <button class="btn-outline-dark btn-sm" onclick="openApiKeyModal()">
+            🔑 Configurar Clave OpenAI API
+          </button>
+        </div>
+
+        <p class="lead-paragraph">
+          <strong>La Cantina de Don Brasa</strong> resuelve la pérdida de clientes por atención manual lenta en WhatsApp y teléfono mediante dos entornos web sincronizados en tiempo real: la <strong>Tienda con Mozo Virtual IA (<code>index.html</code>)</strong> para el cliente y el <strong>Panel Operativo de Cocina y Administración (<code>admin.html</code>)</strong> para el negocio.
+        </p>
+
+        <div class="report-columns">
+          <div class="report-block">
+            <h3>1. Problemas Resueltos</h3>
+            <ul>
+              <li><strong>Eliminación de esperas de 30-40 min en WhatsApp:</strong> El Mozo Virtual ("Don Vito") recomienda platos según lo que el grupo tiene ganas de comer y carga el pedido directamente al carrito.</li>
+              <li><strong>Reservas inteligentes para grupos impares (3, 5, 7) y grandes:</strong> El algoritmo de salón evita ubicar a 3 personas en una mesa chica de 2; asigna automáticamente mesas cómodas de 4, 6 u 8 agregando silla en cabecera o uniendo mesas.</li>
+              <li><strong>Cero quiebres de stock:</strong> Si en cocina se agota un plato o cambia un precio desde este panel, la IA actualiza su contexto en el acto.</li>
+            </ul>
+          </div>
+
+          <div class="report-block">
+            <h3>2. Arquitectura Técnica</h3>
+            <ul>
+              <li><strong>Separación de Roles:</strong> Interfaz limpia para el comensal en <code>/index.html</code> y Backoffice administrativo/cocina en <code>/admin.html</code>.</li>
+              <li><strong>Sincronización en Tiempo Real:</strong> Estado compartido vía <code>/api/state</code> en el servidor Node.js y eventos de almacenamiento en navegador.</li>
+              <li><strong>Integración OpenAI Segura:</strong> Conectado a <code>gpt-4o-mini</code> con modo JSON estructurado, manteniendo la <code>OPENAI_API_KEY</code> protegida en variables de entorno fuera de GitHub.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- FOOTER DEL PANEL ADMIN -->
+  <footer class="site-footer">
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <span>👨‍🍳 Panel Interno de Administración y Cocina — La Cantina de Don Brasa</span>
+        <a href="index.html" style="color:#f8d38d; font-weight:700; text-decoration:none;">⬅ Volver a la Tienda del Cliente</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL ADMIN: CREAR O EDITAR PRODUCTO / PRECIO / FOTO -->
+  <div id="product-editor-modal" class="modal-overlay hidden" onclick="closeProductEditorModal()">
+    <div class="modal-card product-editor-card" onclick="event.stopPropagation()">
+      <button class="modal-close-x" onclick="closeProductEditorModal()">✕</button>
+      <span class="eyebrow-tag">👨‍🍳 ADMINISTRACIÓN DE CARTA EN VIVO</span>
+      <h3 id="prod-editor-title">Subir Nuevo Plato a la Carta</h3>
+
+      <form onsubmit="saveProductFromModal(event)" class="admin-prod-form">
+        <input type="hidden" id="edit-prod-id" value="" />
+
+        <div class="form-row-split">
+          <div class="form-group">
+            <label>Nombre del Plato / Producto *</label>
+            <input type="text" id="edit-prod-name" required placeholder="Ej: Pizza Calabresa a la Piedra" />
+          </div>
+          <div class="form-group">
+            <label>Rubro / Categoría *</label>
+            <select id="edit-prod-category">
+              <option value="Pizzas">🍕 Pizzas al Molde & Piedra</option>
+              <option value="Empanadas">🥟 Empanadas al Barro</option>
+              <option value="Bodegón">🥩 Platos de Bodegón</option>
+              <option value="Bebidas y Postres">🍷 Vermut, Birras & Postres</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-split">
+          <div class="form-group">
+            <label>Precio de Venta ($ ARS) *</label>
+            <input type="number" id="edit-prod-price" required min="100" step="50" placeholder="Ej: 14500" />
+          </div>
+          <div class="form-group">
+            <label>Estado Inicial en Cocina</label>
+            <select id="edit-prod-stock">
+              <option value="true">🟢 Disponible en Stock</option>
+              <option value="false">🔴 Agotado Temporalmente</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción e Ingredientes *</label>
+          <input type="text" id="edit-prod-desc" required placeholder="Ej: Longaniza calabresa artesanal, muzzarella y aceitunas negras..." />
+        </div>
+
+        <div class="form-group">
+          <label>Fotografía del Plato (URL o subir archivo desde tu dispositivo)</label>
+          <input type="text" id="edit-prod-image" placeholder="https://images.unsplash.com/..." />
+          <div class="photo-quick-tools">
+            <label class="btn-upload-file">
+              📷 Subir foto desde mi PC/Celular
+              <input type="file" accept="image/*" onchange="handleLocalImageUpload(event)" style="display:none;" />
+            </label>
+            <button type="button" class="btn-preset-img" onclick="setPresetDishPhoto('pizza')">🍕 Foto Pizza</button>
+            <button type="button" class="btn-preset-img" onclick="setPresetDishPhoto('empanada')">🥟 Foto Empanada</button>
+            <button type="button" class="btn-preset-img" onclick="setPresetDishPhoto('bodegon')">🥩 Foto Bodegón</button>
+            <button type="button" class="btn-preset-img" onclick="setPresetDishPhoto('bebida')">🍷 Foto Bebida</button>
+          </div>
+        </div>
+
+        <div class="diet-filters" style="margin-top:4px;">
+          <label class="diet-check">
+            <input type="checkbox" id="edit-tag-popular" />
+            <span>🔥 Destacado / Clásico</span>
+          </label>
+          <label class="diet-check">
+            <input type="checkbox" id="edit-tag-sintacc" />
+            <span>🌾 Apto Sin TACC</span>
+          </label>
+          <label class="diet-check">
+            <input type="checkbox" id="edit-tag-veggie" />
+            <span>🌿 Vegetariano</span>
+          </label>
+        </div>
+
+        <div class="modal-footer-btns" style="margin-top:10px;">
+          <button type="button" class="btn-outline-dark" onclick="closeProductEditorModal()">Cancelar</button>
+          <button type="submit" class="btn-terracotta">💾 Guardar en la Carta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIGURACIÓN SEGURA DE OPENAI API KEY -->
+  <div id="apikey-modal" class="modal-overlay hidden" onclick="closeApiKeyModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <button class="modal-close-x" onclick="closeApiKeyModal()">✕</button>
+      <h3>🔑 Conexión con OpenAI API</h3>
+      <p class="sub-copy">
+        El servidor ya cuenta con la clave configurada en <code>.env</code>. Si necesitás actualizarla en caliente, podés ingresarla acá.
+      </p>
+      <div class="form-group">
+        <label>OpenAI API Key (<code>sk-...</code>)</label>
+        <input type="password" id="modal-apikey-input" placeholder="sk-proj-..." autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label>Modelo de OpenAI</label>
+        <select id="modal-model-select">
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
+          <option value="gpt-4o">gpt-4o</option>
+        </select>
+      </div>
+      <div id="apikey-status-msg" class="status-feedback"></div>
+      <div class="modal-footer-btns">
+        <button class="btn-outline-dark" onclick="closeApiKeyModal()">Cerrar</button>
+        <button class="btn-terracotta" onclick="saveApiKeyConfig()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

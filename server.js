@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { handleChatRequest } = require('./api/chat');
 
-// Carga automática de archivo .env sin requerir dependencias externas (npm install cero)
+// Carga automática de archivo .env sin requerir dependencias externas
 function loadEnvFile() {
   const envPath = path.join(__dirname, '.env');
   if (!fs.existsSync(envPath)) return;
@@ -36,6 +36,15 @@ loadEnvFile();
 let runtimeApiKey = process.env.OPENAI_API_KEY || '';
 let runtimeModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
+// Estado compartido en memoria del servidor para sincronizar index.html (Cliente) y admin.html (Comercio)
+let sharedState = {
+  catalog: null,
+  orders: null,
+  reservations: null,
+  tables: null,
+  updatedAt: Date.now()
+};
+
 const PORT = process.env.PORT || 3000;
 
 const MIME_TYPES = {
@@ -64,7 +73,7 @@ function readJsonBody(req) {
     let data = '';
     req.on('data', (chunk) => {
       data += chunk;
-      if (data.length > 1e6) req.destroy();
+      if (data.length > 5e6) req.destroy();
     });
     req.on('end', () => {
       try {
@@ -90,6 +99,28 @@ const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
 
+  // Endpoint de sincronización de estado entre Cliente (index.html) y Admin (admin.html)
+  if (pathname === '/api/state' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ ok: true, state: sharedState }));
+  }
+
+  if (pathname === '/api/state' && req.method === 'POST') {
+    try {
+      const body = await readJsonBody(req);
+      if (body.catalog) sharedState.catalog = body.catalog;
+      if (body.orders) sharedState.orders = body.orders;
+      if (body.reservations) sharedState.reservations = body.reservations;
+      if (body.tables) sharedState.tables = body.tables;
+      sharedState.updatedAt = Date.now();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ ok: true, updatedAt: sharedState.updatedAt }));
+    } catch (err) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ ok: false, error: err.message }));
+    }
+  }
+
   // Endpoint de estado y verificación de IA
   if (pathname === '/api/chat' && req.method === 'GET') {
     const activeKey = runtimeApiKey || process.env.OPENAI_API_KEY || '';
@@ -104,7 +135,7 @@ const server = http.createServer(async (req, res) => {
     );
   }
 
-  // Endpoint para configurar la API Key en caliente en el servidor sin subirla a GitHub
+  // Endpoint para configurar la API Key en caliente
   if (pathname === '/api/config-key' && req.method === 'POST') {
     try {
       const body = await readJsonBody(req);
@@ -128,7 +159,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // Endpoint principal de conversación y procesamiento IA
+  // Endpoint principal de conversación con IA
   if (pathname === '/api/chat' && req.method === 'POST') {
     try {
       const body = await readJsonBody(req);
@@ -154,6 +185,8 @@ const server = http.createServer(async (req, res) => {
 
   // Archivos estáticos del Frontend
   let safePath = pathname === '/' ? '/index.html' : pathname;
+  if (safePath === '/admin') safePath = '/admin.html';
+
   if (BLOCKED_FILES.has(safePath) || safePath.startsWith('/api/') || safePath.includes('..')) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     return res.end('Acceso denegado');
@@ -162,7 +195,6 @@ const server = http.createServer(async (req, res) => {
   const filePath = path.join(__dirname, safePath);
   fs.readFile(filePath, (err, content) => {
     if (err) {
-      // Fallback SPA a index.html
       fs.readFile(path.join(__dirname, 'index.html'), (err2, indexContent) => {
         if (err2) {
           res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -182,14 +214,14 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log('====================================================');
-  console.log(`🚀 Don Brasa IA corriendo en: http://localhost:${PORT}`);
+  console.log(`🚀 Cliente Web corriendo en:  http://localhost:${PORT}/`);
+  console.log(`👨‍🍳 Panel Admin & Cocina en:   http://localhost:${PORT}/admin.html`);
   console.log(
-    `🔑 Estado OpenAI API Key en servidor: ${
+    `🔑 Estado OpenAI API Key:     ${
       runtimeApiKey && runtimeApiKey !== 'tu_api_key_de_openai_aqui'
         ? 'ACTIVA ✅'
-        : 'MODO HÍBRIDO / PENDIENTE DE CARGAR ⚙️'
+        : 'MODO HÍBRIDO ⚙️'
     }`
   );
   console.log('====================================================');
 });
-

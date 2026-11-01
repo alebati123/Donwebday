@@ -1,6 +1,7 @@
 // ============================================================================
 // LA CANTINA DE DON BRASA — PLATAFORMA INTEGRAL DE BODEGÓN CON IA
-// Carta Interactiva • Mozo Virtual • Audio/Texto WhatsApp • Mesas Modulares • Admin
+// Carta Interactiva • Mozo Virtual "Don Vito" • Mesas Modulares • Panel Cocina/Admin
+// Sincronización en tiempo real entre index.html (Cliente) y admin.html (Cocina/Admin)
 // ============================================================================
 
 const BUSINESS_INFO = {
@@ -174,39 +175,7 @@ const INITIAL_CATALOG = [
   }
 ];
 
-function loadSavedCatalog() {
-  try {
-    const raw = localStorage.getItem('CANTINA_CATALOG_V1');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {
-    // Usar catálogo por defecto
-  }
-  return JSON.parse(JSON.stringify(INITIAL_CATALOG));
-}
-
-function persistCatalog() {
-  try {
-    localStorage.setItem('CANTINA_CATALOG_V1', JSON.stringify(catalog));
-  } catch {
-    // Ignorar límite de cuota local
-  }
-}
-
-let catalog = loadSavedCatalog();
-let currentCategory = 'all';
-let cart = [];
-let deliveryType = 'delivery';
-let chatHistory = [];
-let suggestedCombosStore = {};
-let activeOrderId = 'DB-1041';
-let selectedTableId = 'T3';
-let currentMobileSubview = 'catalog';
-
-// Mesas con capacidad base + capacidad flexible (cabecera o unión de mesas)
-let restaurantTables = [
+const INITIAL_TABLES = [
   { id: 'T1', number: 1, zone: 'Salón Histórico (Pellegrini)', capacity: 2, maxFlex: 3, flexNote: '2 a 3 pers. (+cabecera)', status: 'free', guest: '' },
   { id: 'T2', number: 2, zone: 'Salón Histórico (Pellegrini)', capacity: 4, maxFlex: 5, flexNote: '3 a 5 pers. (+cabecera)', status: 'occupied', guest: 'Familia Benítez (21:00)' },
   { id: 'T3', number: 3, zone: 'Salón Histórico (Pellegrini)', capacity: 4, maxFlex: 5, flexNote: '3 a 5 pers. (+cabecera)', status: 'free', guest: '' },
@@ -219,14 +188,14 @@ let restaurantTables = [
   { id: 'T10', number: 10, zone: 'Barra de Vermut & Picadas', capacity: 2, maxFlex: 3, flexNote: '2 a 3 pers. (+cabecera)', status: 'free', guest: '' }
 ];
 
-let orders = [
+const INITIAL_ORDERS = [
   {
     id: 'DB-1041',
     customerName: 'Sofía Pellegrini',
     address: '9 de Julio 1420 Piso 2 A',
     deliveryType: 'delivery',
     paymentMethod: 'Transferencia',
-    source: '📲 Pedido Rápido (Audio)',
+    source: '💬 Mozo Virtual',
     status: 'new',
     time: '20:42 hs',
     total: 29100,
@@ -258,7 +227,7 @@ let orders = [
     address: 'Bv. Oroño 620 PB',
     deliveryType: 'delivery',
     paymentMethod: 'Mercado Pago',
-    source: '💬 Menú Sin TACC',
+    source: '🛒 Carta Web (Sin TACC)',
     status: 'ready',
     time: '20:18 hs',
     total: 29050,
@@ -270,7 +239,7 @@ let orders = [
   }
 ];
 
-let reservations = [
+const INITIAL_RESERVATIONS = [
   {
     id: 'RES-201',
     tableId: 'T2',
@@ -291,18 +260,148 @@ let reservations = [
   }
 ];
 
-// ============================================================================
-// INICIALIZACIÓN Y ADAPTACIÓN RESPONSIVE
-// ============================================================================
-document.addEventListener('DOMContentLoaded', () => {
+function loadFromStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // Usar valor inicial
+  }
+  return JSON.parse(JSON.stringify(fallback));
+}
+
+let catalog = loadFromStorage('CANTINA_CATALOG_V1', INITIAL_CATALOG);
+let restaurantTables = loadFromStorage('CANTINA_TABLES_V1', INITIAL_TABLES);
+let orders = loadFromStorage('CANTINA_ORDERS_V1', INITIAL_ORDERS);
+let reservations = loadFromStorage('CANTINA_RESERVATIONS_V1', INITIAL_RESERVATIONS);
+
+let currentCategory = 'all';
+let cart = [];
+let deliveryType = 'delivery';
+let chatHistory = [];
+let suggestedCombosStore = {};
+let activeOrderId = orders[0]?.id || 'DB-1041';
+let selectedTableId = 'T3';
+let currentMobileSubview = 'catalog';
+
+function persistAllState() {
+  try {
+    localStorage.setItem('CANTINA_CATALOG_V1', JSON.stringify(catalog));
+    localStorage.setItem('CANTINA_TABLES_V1', JSON.stringify(restaurantTables));
+    localStorage.setItem('CANTINA_ORDERS_V1', JSON.stringify(orders));
+    localStorage.setItem('CANTINA_RESERVATIONS_V1', JSON.stringify(reservations));
+  } catch {
+    // Ignorar límite local
+  }
+  pushStateToServer();
+}
+
+function persistCatalog() {
+  persistAllState();
+}
+
+async function pushStateToServer() {
+  try {
+    await fetch('/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        catalog,
+        orders,
+        reservations,
+        tables: restaurantTables
+      })
+    });
+  } catch {
+    // Funciona aún sin backend mediante localStorage
+  }
+}
+
+async function pullStateFromServer() {
+  try {
+    const resp = await fetch('/api/state');
+    if (!resp.ok) return;
+    const json = await resp.json();
+    if (!json.ok || !json.state) return;
+    const st = json.state;
+    let changed = false;
+
+    if (Array.isArray(st.catalog) && st.catalog.length > 0) {
+      if (JSON.stringify(st.catalog) !== JSON.stringify(catalog)) {
+        catalog = st.catalog;
+        localStorage.setItem('CANTINA_CATALOG_V1', JSON.stringify(catalog));
+        changed = true;
+      }
+    }
+    if (Array.isArray(st.orders) && st.orders.length > 0) {
+      if (JSON.stringify(st.orders) !== JSON.stringify(orders)) {
+        orders = st.orders;
+        localStorage.setItem('CANTINA_ORDERS_V1', JSON.stringify(orders));
+        changed = true;
+      }
+    }
+    if (Array.isArray(st.reservations) && st.reservations.length > 0) {
+      if (JSON.stringify(st.reservations) !== JSON.stringify(reservations)) {
+        reservations = st.reservations;
+        localStorage.setItem('CANTINA_RESERVATIONS_V1', JSON.stringify(reservations));
+        changed = true;
+      }
+    }
+    if (Array.isArray(st.tables) && st.tables.length > 0) {
+      if (JSON.stringify(st.tables) !== JSON.stringify(restaurantTables)) {
+        restaurantTables = st.tables;
+        localStorage.setItem('CANTINA_TABLES_V1', JSON.stringify(restaurantTables));
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      refreshAllViews();
+    }
+  } catch {
+    // Ignorar si está offline
+  }
+}
+
+function refreshAllViews() {
   renderCatalog();
   renderCart();
   renderTablesFloorplan();
   renderOrderTracker();
   renderAdminDashboard();
+}
+
+// ============================================================================
+// INICIALIZACIÓN Y ADAPTACIÓN RESPONSIVE (CLIENTE + ADMIN)
+// ============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  refreshAllViews();
   initWelcomeChat();
   syncResponsiveLayout();
   window.addEventListener('resize', syncResponsiveLayout);
+
+  // Sincronización instantánea entre pestañas (index.html <-> admin.html)
+  window.addEventListener('storage', (e) => {
+    if (
+      e.key === 'CANTINA_CATALOG_V1' ||
+      e.key === 'CANTINA_ORDERS_V1' ||
+      e.key === 'CANTINA_RESERVATIONS_V1' ||
+      e.key === 'CANTINA_TABLES_V1'
+    ) {
+      catalog = loadFromStorage('CANTINA_CATALOG_V1', INITIAL_CATALOG);
+      orders = loadFromStorage('CANTINA_ORDERS_V1', INITIAL_ORDERS);
+      reservations = loadFromStorage('CANTINA_RESERVATIONS_V1', INITIAL_RESERVATIONS);
+      restaurantTables = loadFromStorage('CANTINA_TABLES_V1', INITIAL_TABLES);
+      refreshAllViews();
+    }
+  });
+
+  // Sincronización inicial con el servidor
+  pushStateToServer();
+  setInterval(pullStateFromServer, 4000);
 });
 
 function syncResponsiveLayout() {
@@ -336,13 +435,18 @@ function setMobileMenuSubview(subview) {
   const activeBtn = document.getElementById(`msub-${subview}`);
   if (activeBtn) activeBtn.classList.add('active');
 
-  if (subview === 'chat' || subview === 'whatsapp' || subview === 'cart') {
+  if (subview === 'chat' || subview === 'cart') {
     switchRightTab(subview);
   }
   syncResponsiveLayout();
 }
 
 function navigateApp(screenName) {
+  if (screenName === 'admin' && !document.getElementById('screen-admin')) {
+    window.location.href = 'admin.html';
+    return;
+  }
+
   document.querySelectorAll('.app-screen').forEach((s) => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'));
   document.querySelectorAll('.mnav-btn').forEach((b) => b.classList.remove('active'));
@@ -385,15 +489,6 @@ function openMobileAssistant() {
   }
 }
 
-function openWhatsAppParserView() {
-  navigateApp('menu');
-  if (window.innerWidth <= 1040) {
-    setMobileMenuSubview('whatsapp');
-  } else {
-    switchRightTab('whatsapp');
-  }
-}
-
 function openMobileCartOrFocus() {
   navigateApp('menu');
   if (window.innerWidth <= 1040) {
@@ -409,13 +504,16 @@ function openMobileCartOrFocus() {
 function selectCategory(cat) {
   currentCategory = cat;
   document.querySelectorAll('.cat-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${cat}'`));
+    const onclickAttr = btn.getAttribute('onclick') || '';
+    btn.classList.toggle('active', onclickAttr.includes(`'${cat}'`));
   });
   renderCatalog();
 }
 
 function renderCatalog() {
   const grid = document.getElementById('catalog-grid');
+  if (!grid) return;
+
   const query = (document.getElementById('catalog-search')?.value || '').toLowerCase().trim();
   const onlySinTacc = document.getElementById('filter-sintacc')?.checked;
   const onlyVeggie = document.getElementById('filter-veggie')?.checked;
@@ -497,6 +595,7 @@ function openDishModal(dishId) {
 
   const modal = document.getElementById('dish-modal');
   const body = document.getElementById('dish-modal-body');
+  if (!modal || !body) return;
 
   body.innerHTML = `
     <img src="${dish.image}" alt="${dish.name}" style="width:100%; height:190px; object-fit:cover; border-radius:10px; margin-bottom:10px;" />
@@ -535,7 +634,7 @@ function openDishModal(dishId) {
 }
 
 function closeDishModal() {
-  document.getElementById('dish-modal').classList.add('hidden');
+  document.getElementById('dish-modal')?.classList.add('hidden');
 }
 
 function confirmDishModalAdd(dishId) {
@@ -574,9 +673,10 @@ function changeCartQty(index, delta) {
 
 function setDeliveryType(type) {
   deliveryType = type;
-  document.getElementById('deliv-btn-delivery').classList.toggle('active', type === 'delivery');
-  document.getElementById('deliv-btn-takeaway').classList.toggle('active', type === 'takeaway');
-  document.getElementById('address-field-row').style.display = type === 'delivery' ? 'block' : 'none';
+  document.getElementById('deliv-btn-delivery')?.classList.toggle('active', type === 'delivery');
+  document.getElementById('deliv-btn-takeaway')?.classList.toggle('active', type === 'takeaway');
+  const addrRow = document.getElementById('address-field-row');
+  if (addrRow) addrRow.style.display = type === 'delivery' ? 'block' : 'none';
   renderCart();
 }
 
@@ -616,10 +716,12 @@ function renderCart() {
   const upsellBox = document.getElementById('ai-upsell-box');
 
   const { subtotal, discount, shipping, finalTotal, totalItems } = calculateCartTotals();
-  badgeEl.textContent = totalItems;
+  if (badgeEl) badgeEl.textContent = totalItems;
   if (dockCountEl) dockCountEl.textContent = totalItems;
   if (msubCartEl) msubCartEl.textContent = totalItems;
   if (headerTotalEl) headerTotalEl.textContent = `$${finalTotal.toLocaleString('es-AR')}`;
+
+  if (!listEl || !breakdownEl) return;
 
   if (cart.length === 0) {
     listEl.innerHTML = `
@@ -628,7 +730,7 @@ function renderCart() {
         Elegí platos de la carta o contale a <strong>Don Vito</strong> qué tenés ganas de comer hoy.
       </div>
     `;
-    upsellBox.classList.add('hidden');
+    upsellBox?.classList.add('hidden');
   } else {
     listEl.innerHTML = cart
       .map((entry, idx) => {
@@ -655,20 +757,22 @@ function renderCart() {
     const fainaProd = catalog.find((p) => p.id === 'b3');
     const vermutProd = catalog.find((p) => p.id === 'd3');
 
-    if (hasPizza && !hasFaina && fainaProd?.inStock) {
-      upsellBox.classList.remove('hidden');
-      upsellBox.innerHTML = `
-        <div>✨ <strong>Para acompañar tu pizza:</strong> ¿Sumamos una porción de <em>${fainaProd.name}</em> por $${fainaProd.price.toLocaleString('es-AR')}?</div>
-        <button class="btn-add-dish" onclick="addToCart('b3', 1, 'A caballo')">+ Agregar</button>
-      `;
-    } else if (!hasDrink && vermutProd?.inStock) {
-      upsellBox.classList.remove('hidden');
-      upsellBox.innerHTML = `
-        <div>✨ <strong>Para tomar:</strong> ¿Agregamos un <em>${vermutProd.name}</em> bien frío por $${vermutProd.price.toLocaleString('es-AR')}?</div>
-        <button class="btn-add-dish" onclick="addToCart('d3', 1, '')">+ Agregar</button>
-      `;
-    } else {
-      upsellBox.classList.add('hidden');
+    if (upsellBox) {
+      if (hasPizza && !hasFaina && fainaProd?.inStock) {
+        upsellBox.classList.remove('hidden');
+        upsellBox.innerHTML = `
+          <div>✨ <strong>Para acompañar tu pizza:</strong> ¿Sumamos una porción de <em>${fainaProd.name}</em> por $${fainaProd.price.toLocaleString('es-AR')}?</div>
+          <button class="btn-add-dish" onclick="addToCart('b3', 1, 'A caballo')">+ Agregar</button>
+        `;
+      } else if (!hasDrink && vermutProd?.inStock) {
+        upsellBox.classList.remove('hidden');
+        upsellBox.innerHTML = `
+          <div>✨ <strong>Para tomar:</strong> ¿Agregamos un <em>${vermutProd.name}</em> bien frío por $${vermutProd.price.toLocaleString('es-AR')}?</div>
+          <button class="btn-add-dish" onclick="addToCart('d3', 1, '')">+ Agregar</button>
+        `;
+      } else {
+        upsellBox.classList.add('hidden');
+      }
     }
   }
 
@@ -754,7 +858,6 @@ function autoMatchTableForPeopleCount() {
   const people = Number(document.getElementById('res-people')?.value) || 4;
   const setupSelect = document.getElementById('res-seating-setup');
 
-  // Ajustar sugerencia de configuración según número impar o grupo grande
   if (setupSelect) {
     if (people === 3 || people === 5 || people === 7) {
       setupSelect.value = 'Sumar silla extra en cabecera';
@@ -784,6 +887,8 @@ function renderTablesFloorplan() {
 
   const freeCount = restaurantTables.filter((t) => t.status === 'free').length;
   if (freeBadge) freeBadge.textContent = `${freeCount} libres`;
+
+  if (!container) return;
 
   const zones = [...new Set(restaurantTables.map((t) => t.zone))];
   container.innerHTML = zones
@@ -845,7 +950,6 @@ function selectFloorTable(tableId) {
 
   const peopleSelect = document.getElementById('res-people');
   const currentPeople = Number(peopleSelect?.value) || t.capacity;
-  // Si la mesa elegida es más chica que lo seleccionado, ajustamos o indicamos cabecera
   const effectivePeople = currentPeople <= t.maxFlex ? currentPeople : t.capacity;
   if (peopleSelect && currentPeople > t.maxFlex) {
     peopleSelect.value = String(t.capacity);
@@ -861,11 +965,11 @@ function selectFloorTable(tableId) {
 
 function handleManualReservationSubmit(e) {
   e.preventDefault();
-  const name = document.getElementById('res-name').value.trim();
-  const people = Number(document.getElementById('res-people').value) || 4;
-  const time = document.getElementById('res-time').value;
+  const name = document.getElementById('res-name')?.value.trim() || 'Cliente';
+  const people = Number(document.getElementById('res-people')?.value) || 4;
+  const time = document.getElementById('res-time')?.value || '21:30 hs';
   const setup = document.getElementById('res-seating-setup')?.value || '';
-  const extraNotes = document.getElementById('res-notes').value.trim();
+  const extraNotes = document.getElementById('res-notes')?.value.trim() || '';
 
   let tableObj = restaurantTables.find((t) => t.id === selectedTableId && t.status === 'free');
   if (!tableObj || tableObj.maxFlex < people) {
@@ -887,8 +991,8 @@ function handleManualReservationSubmit(e) {
     tableId: tableObj ? tableObj.id : null
   });
 
-  document.getElementById('res-name').value = '';
-  document.getElementById('res-notes').value = '';
+  if (document.getElementById('res-name')) document.getElementById('res-name').value = '';
+  if (document.getElementById('res-notes')) document.getElementById('res-notes').value = '';
   alert(`¡Reserva confirmada para ${name} (${people} personas) hoy a las ${time}!\nArmado: ${explain}.`);
 }
 
@@ -903,7 +1007,6 @@ function registerNewReservation(resObj) {
     }
   }
 
-  // Si no se especificó mesa o la mesa era chica (ej: eran 3 y apuntaba a una de 2), buscar la mejor mesa cómoda
   if (!targetTable) {
     targetTable = findBestFreeTableForPeople(peopleCount);
   }
@@ -928,6 +1031,22 @@ function registerNewReservation(resObj) {
   };
 
   reservations.unshift(newRes);
+  persistAllState();
+  renderTablesFloorplan();
+  renderAdminDashboard();
+}
+
+function toggleTableOccupiedStatus(tableId) {
+  const t = restaurantTables.find((x) => x.id === tableId);
+  if (!t) return;
+  if (t.status === 'occupied') {
+    t.status = 'free';
+    t.guest = '';
+  } else {
+    t.status = 'occupied';
+    t.guest = 'Ocupada en Salón';
+  }
+  persistAllState();
   renderTablesFloorplan();
   renderAdminDashboard();
 }
@@ -936,15 +1055,16 @@ function registerNewReservation(resObj) {
 // CONSERJE GASTRONÓMICO ("DON VITO")
 // ============================================================================
 function initWelcomeChat() {
-  chatHistory = [];
   const box = document.getElementById('chat-messages');
+  if (!box) return;
+  chatHistory = [];
   box.innerHTML = '';
   appendAssistantMessage({
     reply:
       '¡Buenas noches! Soy **Don Vito**, el mozo virtual de **La Cantina de Don Brasa**.\n\n' +
       'Contame cómo te puedo ayudar hoy:\n' +
       '• 🍕 **¿No saben qué pedir?** Decime qué tienen ganas de comer hoy y cuántos son para recomendarte lo más rico del horno de barro.\n' +
-      '• 🛒 **Armo tu pedido:** Dictame los platos y tu dirección y te los cargo directo al carrito.\n' +
+      '• 🛒 **Armo tu pedido:** Escribime como quieras los platos y tu dirección y te los cargo directo al carrito.\n' +
       '• 🪑 **Reservo tu mesa:** Si son 2, 3, 5 o un grupo grande, preparamos la mesa con sillas extra o unimos mesas para que estén cómodos.'
   });
 }
@@ -960,6 +1080,7 @@ function formatMarkdownText(text) {
 
 function appendUserMessage(text) {
   const box = document.getElementById('chat-messages');
+  if (!box) return;
   const div = document.createElement('div');
   div.className = 'msg-bubble user';
   div.innerHTML = formatMarkdownText(text);
@@ -969,6 +1090,7 @@ function appendUserMessage(text) {
 
 function appendAssistantMessage(aiData) {
   const box = document.getElementById('chat-messages');
+  if (!box) return;
   const div = document.createElement('div');
   div.className = 'msg-bubble assistant';
 
@@ -1066,10 +1188,14 @@ function applySuggestedCombo(comboId) {
 
 function applyExtractedCustomerData(ext) {
   if (!ext) return;
-  if (ext.customerName) document.getElementById('cust-name').value = ext.customerName;
-  if (ext.address) document.getElementById('cust-address').value = ext.address;
-  if (ext.paymentMethod) {
-    const sel = document.getElementById('cust-payment');
+  const nameEl = document.getElementById('cust-name');
+  const addrEl = document.getElementById('cust-address');
+  const sel = document.getElementById('cust-payment');
+  const notesEl = document.getElementById('cust-notes');
+
+  if (ext.customerName && nameEl) nameEl.value = ext.customerName;
+  if (ext.address && addrEl) addrEl.value = ext.address;
+  if (ext.paymentMethod && sel) {
     const norm = ext.paymentMethod.toLowerCase();
     if (norm.includes('efectivo')) sel.value = 'Efectivo';
     else if (norm.includes('mercado')) sel.value = 'Mercado Pago';
@@ -1079,7 +1205,7 @@ function applyExtractedCustomerData(ext) {
   if (ext.deliveryType === 'takeaway' || ext.deliveryType === 'delivery') {
     setDeliveryType(ext.deliveryType);
   }
-  if (ext.notes) document.getElementById('cust-notes').value = ext.notes;
+  if (ext.notes && notesEl) notesEl.value = ext.notes;
 }
 
 function triggerQuickPrompt(promptText) {
@@ -1090,14 +1216,17 @@ function triggerQuickPrompt(promptText) {
     switchRightTab('chat');
   }
   const input = document.getElementById('chat-input');
-  input.value = promptText;
-  sendChatMessage(promptText);
-  input.value = '';
+  if (input) {
+    input.value = promptText;
+    sendChatMessage(promptText);
+    input.value = '';
+  }
 }
 
 async function handleChatSubmit(e) {
   e.preventDefault();
   const input = document.getElementById('chat-input');
+  if (!input) return;
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
@@ -1114,7 +1243,7 @@ async function sendChatMessage(userText, mode = 'chat') {
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'msg-bubble assistant';
   loadingDiv.innerHTML = `<div class="msg-header">Don Vito • Mozo de la Cantina</div><div>🔥 <em>Consultando la cocina en vivo...</em></div>`;
-  if (mode === 'chat') {
+  if (mode === 'chat' && box) {
     box.appendChild(loadingDiv);
     box.scrollTop = box.scrollHeight;
   }
@@ -1235,7 +1364,11 @@ function localSmartEngine(rawText) {
   else if (text.includes('mercado pago') || text.includes('mercadopago')) result.extractedOrder.paymentMethod = 'Mercado Pago';
 
   // Reserva de mesa inteligente (maneja 3, 5, 7 y grupos grandes con mesas de 4, 6, 8 o unión)
-  if (text.includes('reserv') || (text.includes('mesa') && (text.includes('personas') || text.includes('patio') || text.includes('21') || text.includes('22') || text.includes('somos')))) {
+  if (
+    text.includes('reserv') ||
+    (text.includes('mesa') &&
+      (text.includes('personas') || text.includes('patio') || text.includes('21') || text.includes('22') || text.includes('somos')))
+  ) {
     const peopleMatch = text.match(/(\d+)\s*(?:personas|amigos|cubiertos|comensales)/);
     const timeMatch = text.match(/(\d{1,2}(?::\d{2})?)\s*(?:hs|horas)?/);
     const area = text.includes('patio') ? 'Patio de Parra & Guirnaldas' : 'Salón Histórico (Pellegrini)';
@@ -1282,7 +1415,9 @@ function localSmartEngine(rawText) {
       const prod = catalog.find((p) => p.id === id && p.inStock);
       if (prod) {
         combo.push({ id: prod.id, quantity: qty, name: prod.name, price: prod.price });
+        return true;
       }
+      return false;
     };
 
     if (hasCeliac) tryAdd('p5', 1);
@@ -1421,73 +1556,6 @@ function localSmartEngine(rawText) {
 }
 
 // ============================================================================
-// INTERPRETADOR DE WHATSAPP & SIMULADOR DE AUDIO
-// ============================================================================
-const WA_SAMPLES = {
-  1: 'Hola buenas noches! Soy Martín Gómez, mandame por favor 1 pizza napolitana al barro, 6 empanadas de carne cortada a cuchillo, 2 de jamon y queso y una coca de litro y medio a Bv. Oroño 840 Piso 3 B. Pago por transferencia.',
-  2: 'Hola maestro! Somos varios acá en Rioja 1850, mandanos 1 milanesa napolitana XXL de bodegón, 1 pizza de muzzarella al molde y 1 jarra de limonada. A nombre de Lucía, pagamos con Mercado Pago.',
-  3: 'Buenas! Soy Federico, paso a retirar por el mostrador en 20 minutos: preparame 1 pizza muzzarella sin TACC, 4 empanadas de humita y 1 porción de fainá. Pago en efectivo.'
-};
-
-function loadWhatsAppSample(num) {
-  document.getElementById('wa-raw-input').value = WA_SAMPLES[num] || '';
-}
-
-function simulateVoiceTranscription() {
-  const voiceTranscript =
-    '🎙️ [Audio transcripto]: "Hola chicos de Don Brasa, habla Ramiro! Mándenme a San Martín 1120 piso 4 B una fugazzeta rellena, cuatro empanadas de carne cortada a cuchillo y un vermut con soda. Les transfiero al alias ahora mismo, gracias!"';
-  document.getElementById('wa-raw-input').value = voiceTranscript;
-  processWhatsAppText();
-}
-
-async function processWhatsAppText() {
-  const raw = document.getElementById('wa-raw-input').value.trim();
-  const resBox = document.getElementById('wa-parse-result');
-  const btn = document.getElementById('btn-parse-wa');
-
-  if (!raw) {
-    resBox.classList.remove('hidden');
-    resBox.innerHTML = '⚠️ Seleccioná un pedido de ejemplo, el audio de arriba o escribí tu pedido primero.';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = '⏳ Armando tu carrito automáticamente...';
-
-  cart = [];
-  const aiData = await sendChatMessage(raw, 'whatsapp_parser');
-
-  if (Array.isArray(aiData.autoCartAdd)) {
-    aiData.autoCartAdd.forEach((item) => addToCart(item.id, Number(item.quantity) || 1, 'Pedido Rápido'));
-  }
-  if (aiData.extractedOrder) {
-    applyExtractedCustomerData(aiData.extractedOrder);
-  }
-
-  btn.disabled = false;
-  btn.textContent = '⚡ Cargar Platos Automáticamente al Carrito';
-
-  const { finalTotal, totalItems } = calculateCartTotals();
-  resBox.classList.remove('hidden');
-  resBox.innerHTML = `
-    <div style="color:var(--green-ok); font-weight:800; margin-bottom:6px;">
-      ✅ ¡Tu pedido ya fue cargado en el Carrito!
-    </div>
-    <div>• <strong>Productos sumados:</strong> ${totalItems} unidades</div>
-    <div>• <strong>Cliente:</strong> ${document.getElementById('cust-name').value || 'Ramiro'}</div>
-    <div>• <strong>Entrega:</strong> ${
-      deliveryType === 'takeaway'
-        ? 'Retiro en local (-10%)'
-        : document.getElementById('cust-address').value || 'Envío a domicilio'
-    }</div>
-    <div style="font-family:var(--font-mono); font-weight:700; margin-top:4px;">TOTAL: $${finalTotal.toLocaleString('es-AR')}</div>
-    <button class="btn-terracotta btn-block" style="margin-top:10px;" onclick="openMobileCartOrFocus()">
-      🛒 Ir a Mi Carrito para Confirmar (${totalItems})
-    </button>
-  `;
-}
-
-// ============================================================================
 // CONFIRMAR PEDIDO Y SEGUIMIENTO EN VIVO (TRACKER)
 // ============================================================================
 function submitFinalOrder() {
@@ -1496,13 +1564,13 @@ function submitFinalOrder() {
     return;
   }
 
-  const name = document.getElementById('cust-name').value.trim() || 'Cliente Web';
+  const name = document.getElementById('cust-name')?.value.trim() || 'Cliente Web';
   const address =
     deliveryType === 'takeaway'
       ? 'Retiro en mostrador (Av. Pellegrini 1540)'
-      : document.getElementById('cust-address').value.trim() || 'Centro, Rosario';
-  const payment = document.getElementById('cust-payment').value;
-  const generalNotes = document.getElementById('cust-notes').value.trim();
+      : document.getElementById('cust-address')?.value.trim() || 'Centro, Rosario';
+  const payment = document.getElementById('cust-payment')?.value || 'Transferencia';
+  const generalNotes = document.getElementById('cust-notes')?.value.trim() || '';
   const { finalTotal } = calculateCartTotals();
 
   const orderItems = cart
@@ -1536,6 +1604,7 @@ function submitFinalOrder() {
   orders.unshift(newOrder);
   activeOrderId = newOrder.id;
   cart = [];
+  persistAllState();
   renderCart();
   renderAdminDashboard();
 
@@ -1606,47 +1675,65 @@ function renderOrderTracker() {
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <span class="sub-copy" style="font-size:0.82rem;">💡 En el <strong>👨‍🍳 Panel Admin</strong> podés avanzar el estado de este pedido y ver cómo cambia en tiempo real.</span>
-        <button class="btn-outline-dark" onclick="navigateApp('admin'); switchAdminSubtab('kanban');">
-          👨‍🍳 Ver Pedidos en Cocina →
-        </button>
+        <span class="sub-copy" style="font-size:0.82rem;">💡 El estado se actualiza automáticamente cuando la cocina avanza tu pedido en el panel administrativo.</span>
+        <a href="admin.html" class="btn-outline-dark" style="text-decoration:none;">
+          👨‍🍳 Abrir Panel Cocina & Admin →
+        </a>
       </div>
     </div>
   `;
 }
 
 // ============================================================================
-// PANEL ADMINISTRADOR: ABM DE PRODUCTOS, EDITOR DE PRECIOS, STOCK Y COCINA
+// PANEL ADMINISTRADOR (admin.html): ABM DE PRODUCTOS, PRECIOS, STOCK Y COCINA
 // ============================================================================
 function switchAdminSubtab(tabName) {
   document.querySelectorAll('.adm-subtab').forEach((b) => b.classList.remove('active'));
   document.querySelectorAll('.adm-view').forEach((v) => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
+  document.querySelectorAll('.mnav-btn').forEach((m) => m.classList.remove('active'));
 
   const tab = document.getElementById(`admtab-${tabName}`);
   const view = document.getElementById(`admview-${tabName}`);
+  const nav = document.getElementById(`admnav-${tabName}`);
+  const mnav = document.getElementById(`mnav-${tabName}`);
+
   if (tab) tab.classList.add('active');
   if (view) view.classList.add('active');
+  if (nav) nav.classList.add('active');
+  if (mnav) mnav.classList.add('active');
 }
 
 function renderAdminDashboard() {
-  document.getElementById('admin-orders-badge').textContent = orders.length;
-  document.getElementById('kpi-orders-count').textContent = orders.length;
+  const admBadge = document.getElementById('admin-orders-badge');
+  if (admBadge) admBadge.textContent = orders.length;
+
+  const kpiOrd = document.getElementById('kpi-orders-count');
+  if (!kpiOrd) return; // No estamos en admin.html
+
+  kpiOrd.textContent = orders.length;
 
   const totalRev = orders.reduce((acc, o) => acc + (o.total || 0), 0);
-  document.getElementById('kpi-revenue').textContent = '$' + totalRev.toLocaleString('es-AR');
+  const kpiRev = document.getElementById('kpi-revenue');
+  if (kpiRev) kpiRev.textContent = '$' + totalRev.toLocaleString('es-AR');
 
   const kpiCat = document.getElementById('kpi-catalog-count');
   if (kpiCat) kpiCat.textContent = catalog.length;
-  document.getElementById('kpi-reservations-count').textContent = reservations.length;
+
+  const kpiRes = document.getElementById('kpi-reservations-count');
+  if (kpiRes) kpiRes.textContent = reservations.length;
 
   const cols = { new: [], cooking: [], ready: [] };
   orders.forEach((o) => {
     if (cols[o.status]) cols[o.status].push(o);
   });
 
-  document.getElementById('count-new').textContent = cols.new.length;
-  document.getElementById('count-cooking').textContent = cols.cooking.length;
-  document.getElementById('count-ready').textContent = cols.ready.length;
+  const cNew = document.getElementById('count-new');
+  const cCook = document.getElementById('count-cooking');
+  const cReady = document.getElementById('count-ready');
+  if (cNew) cNew.textContent = cols.new.length;
+  if (cCook) cCook.textContent = cols.cooking.length;
+  if (cReady) cReady.textContent = cols.ready.length;
 
   const renderOrderCard = (o) => {
     let nextLabel = '';
@@ -1683,77 +1770,109 @@ function renderAdminDashboard() {
     `;
   };
 
-  document.getElementById('kanban-new').innerHTML = cols.new.map(renderOrderCard).join('');
-  document.getElementById('kanban-cooking').innerHTML = cols.cooking.map(renderOrderCard).join('');
-  document.getElementById('kanban-ready').innerHTML = cols.ready.map(renderOrderCard).join('');
+  const kNew = document.getElementById('kanban-new');
+  const kCook = document.getElementById('kanban-cooking');
+  const kReady = document.getElementById('kanban-ready');
+  if (kNew) kNew.innerHTML = cols.new.map(renderOrderCard).join('');
+  if (kCook) kCook.innerHTML = cols.cooking.map(renderOrderCard).join('');
+  if (kReady) kReady.innerHTML = cols.ready.map(renderOrderCard).join('');
 
   const stockEl = document.getElementById('admin-stock-list');
-  stockEl.innerHTML = catalog
-    .map(
-      (item) => `
-      <div class="admin-prod-row">
-        <div class="stock-dish-cell">
-          <img src="${item.image}" alt="${item.name}" class="stock-thumb" loading="lazy" />
-          <div>
-            <strong>${item.name}</strong>
-            <div style="font-size:0.74rem; color:var(--ink-muted);">${item.category} • ID: <code>${item.id}</code></div>
+  if (stockEl) {
+    stockEl.innerHTML = catalog
+      .map(
+        (item) => `
+        <div class="admin-prod-row">
+          <div class="stock-dish-cell">
+            <img src="${item.image}" alt="${item.name}" class="stock-thumb" loading="lazy" />
+            <div>
+              <strong>${item.name}</strong>
+              <div style="font-size:0.74rem; color:var(--ink-muted);">${item.category} • ID: <code>${item.id}</code></div>
+            </div>
+          </div>
+
+          <div class="inline-price-box">
+            <span>$</span>
+            <input
+              type="number"
+              id="price-input-${item.id}"
+              class="inline-price-input"
+              value="${item.price}"
+              step="50"
+              min="100"
+            />
+            <button
+              type="button"
+              class="btn-save-price"
+              id="btn-save-price-${item.id}"
+              onclick="saveInlinePrice('${item.id}')"
+            >
+              Guardar $
+            </button>
+          </div>
+
+          <div class="admin-row-actions">
+            <button
+              type="button"
+              class="btn-toggle-stock ${item.inStock ? 'in-stock' : 'out-stock'}"
+              onclick="toggleProductStock('${item.id}')"
+            >
+              ${item.inStock ? '🟢 En Stock' : '🔴 AGOTADO'}
+            </button>
+            <button type="button" class="btn-edit-prod" onclick="openProductEditorModal('${item.id}')">
+              ✏️ Editar
+            </button>
+            <button type="button" class="btn-delete-prod" onclick="deleteProductFromCatalog('${item.id}')" title="Eliminar producto">
+              🗑️
+            </button>
           </div>
         </div>
-
-        <div class="inline-price-box">
-          <span>$</span>
-          <input
-            type="number"
-            id="price-input-${item.id}"
-            class="inline-price-input"
-            value="${item.price}"
-            step="50"
-            min="100"
-          />
-          <button
-            type="button"
-            class="btn-save-price"
-            id="btn-save-price-${item.id}"
-            onclick="saveInlinePrice('${item.id}')"
-          >
-            Guardar $
-          </button>
-        </div>
-
-        <div class="admin-row-actions">
-          <button
-            type="button"
-            class="btn-toggle-stock ${item.inStock ? 'in-stock' : 'out-stock'}"
-            onclick="toggleProductStock('${item.id}')"
-          >
-            ${item.inStock ? '🟢 En Stock' : '🔴 AGOTADO'}
-          </button>
-          <button type="button" class="btn-edit-prod" onclick="openProductEditorModal('${item.id}')">
-            ✏️ Editar
-          </button>
-          <button type="button" class="btn-delete-prod" onclick="deleteProductFromCatalog('${item.id}')" title="Eliminar producto">
-            🗑️
-          </button>
-        </div>
-      </div>
-    `
-    )
-    .join('');
+      `
+      )
+      .join('');
+  }
 
   const resEl = document.getElementById('admin-reservations-list');
-  resEl.innerHTML = reservations
-    .map(
-      (r) => `
-      <div class="stock-row">
-        <div>
-          <strong>🪑 ${r.time} — ${r.name} (${r.people} personas)</strong>
-          <div style="font-size:0.75rem; color:var(--ink-muted);">${r.area} • ${r.notes}</div>
+  if (resEl) {
+    resEl.innerHTML = reservations
+      .map(
+        (r) => `
+        <div class="stock-row">
+          <div>
+            <strong>🪑 ${r.time} — ${r.name} (${r.people} personas)</strong>
+            <div style="font-size:0.75rem; color:var(--ink-muted);">${r.area} • ${r.notes}</div>
+          </div>
+          <span class="order-source-badge">Confirmada</span>
         </div>
-        <span class="order-source-badge">Confirmada</span>
-      </div>
-    `
-    )
-    .join('');
+      `
+      )
+      .join('');
+  }
+
+  const tablesCtrlEl = document.getElementById('admin-tables-control-list');
+  if (tablesCtrlEl) {
+    tablesCtrlEl.innerHTML = restaurantTables
+      .map(
+        (t) => `
+        <div class="stock-row">
+          <div>
+            <strong>Mesa #${t.number} — ${t.zone} (${t.capacity} a ${t.maxFlex} pers.)</strong>
+            <div style="font-size:0.75rem; color:var(--ink-muted);">${
+              t.status === 'occupied' ? `🔒 Ocupada: ${t.guest}` : '🟢 Libre para asignar'
+            }</div>
+          </div>
+          <button
+            type="button"
+            class="btn-toggle-stock ${t.status === 'free' ? 'in-stock' : 'out-stock'}"
+            onclick="toggleTableOccupiedStatus('${t.id}')"
+          >
+            ${t.status === 'free' ? '🟢 Libre (Ocupar)' : '🔓 Liberar Mesa'}
+          </button>
+        </div>
+      `
+      )
+      .join('');
+  }
 }
 
 function saveInlinePrice(productId) {
@@ -1764,7 +1883,7 @@ function saveInlinePrice(productId) {
 
   const newPrice = Math.max(100, Math.round(Number(input.value) || prod.price));
   prod.price = newPrice;
-  persistCatalog();
+  persistAllState();
   renderCatalog();
   renderCart();
 
@@ -1783,28 +1902,22 @@ function applyBulkPriceChange(percent) {
   catalog.forEach((item) => {
     item.price = Math.max(100, Math.round((item.price * factor) / 50) * 50);
   });
-  persistCatalog();
-  renderCatalog();
-  renderCart();
-  renderAdminDashboard();
+  persistAllState();
+  refreshAllViews();
 }
 
 function resetCatalogToDefaults() {
   catalog = JSON.parse(JSON.stringify(INITIAL_CATALOG));
-  persistCatalog();
-  renderCatalog();
-  renderCart();
-  renderAdminDashboard();
+  persistAllState();
+  refreshAllViews();
 }
 
 function deleteProductFromCatalog(productId) {
   if (catalog.length <= 1) return;
   catalog = catalog.filter((p) => p.id !== productId);
   cart = cart.filter((c) => c.id !== productId);
-  persistCatalog();
-  renderCatalog();
-  renderCart();
-  renderAdminDashboard();
+  persistAllState();
+  refreshAllViews();
 }
 
 const PRESET_PHOTOS = {
@@ -1828,7 +1941,8 @@ function handleLocalImageUpload(event) {
   reader.onload = (e) => {
     const dataUrl = e.target?.result;
     if (typeof dataUrl === 'string') {
-      document.getElementById('edit-prod-image').value = dataUrl;
+      const imgInput = document.getElementById('edit-prod-image');
+      if (imgInput) imgInput.value = dataUrl;
     }
   };
   reader.readAsDataURL(file);
@@ -1837,6 +1951,7 @@ function handleLocalImageUpload(event) {
 function openProductEditorModal(productId = null) {
   const modal = document.getElementById('product-editor-modal');
   const titleEl = document.getElementById('prod-editor-title');
+  if (!modal || !titleEl) return;
   const existing = productId ? catalog.find((p) => p.id === productId) : null;
 
   if (existing) {
@@ -1869,7 +1984,7 @@ function openProductEditorModal(productId = null) {
 }
 
 function closeProductEditorModal() {
-  document.getElementById('product-editor-modal').classList.add('hidden');
+  document.getElementById('product-editor-modal')?.classList.add('hidden');
 }
 
 function saveProductFromModal(e) {
@@ -1912,10 +2027,8 @@ function saveProductFromModal(e) {
     });
   }
 
-  persistCatalog();
-  renderCatalog();
-  renderCart();
-  renderAdminDashboard();
+  persistAllState();
+  refreshAllViews();
   closeProductEditorModal();
 }
 
@@ -1924,6 +2037,7 @@ function advanceOrderStatus(orderId) {
   if (!ord) return;
   if (ord.status === 'new') ord.status = 'cooking';
   else if (ord.status === 'cooking') ord.status = 'ready';
+  persistAllState();
   renderAdminDashboard();
   renderOrderTracker();
 }
@@ -1932,9 +2046,8 @@ function toggleProductStock(productId) {
   const prod = catalog.find((p) => p.id === productId);
   if (!prod) return;
   prod.inStock = !prod.inStock;
-  persistCatalog();
-  renderCatalog();
-  renderAdminDashboard();
+  persistAllState();
+  refreshAllViews();
 }
 
 function simulateIncomingWhatsAppOrder() {
@@ -1948,7 +2061,7 @@ function simulateIncomingWhatsAppOrder() {
     address: addresses[idx],
     deliveryType: 'delivery',
     paymentMethod: 'Mercado Pago',
-    source: '📲 Pedido Web (En Vivo)',
+    source: '💬 Mozo Virtual (En Vivo)',
     status: 'new',
     time: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs',
     total: 27400,
@@ -1960,6 +2073,7 @@ function simulateIncomingWhatsAppOrder() {
   };
   orders.unshift(simOrder);
   activeOrderId = simOrder.id;
+  persistAllState();
   renderAdminDashboard();
   renderOrderTracker();
   switchAdminSubtab('kanban');
@@ -1970,18 +2084,20 @@ function simulateIncomingWhatsAppOrder() {
 // ============================================================================
 function openApiKeyModal() {
   const current = sessionStorage.getItem('OPENAI_API_KEY') || '';
-  document.getElementById('modal-apikey-input').value = current;
-  document.getElementById('apikey-status-msg').textContent = '';
-  document.getElementById('apikey-modal').classList.remove('hidden');
+  const input = document.getElementById('modal-apikey-input');
+  const msg = document.getElementById('apikey-status-msg');
+  if (input) input.value = current;
+  if (msg) msg.textContent = '';
+  document.getElementById('apikey-modal')?.classList.remove('hidden');
 }
 
 function closeApiKeyModal() {
-  document.getElementById('apikey-modal').classList.add('hidden');
+  document.getElementById('apikey-modal')?.classList.add('hidden');
 }
 
 async function saveApiKeyConfig() {
-  const key = document.getElementById('modal-apikey-input').value.trim();
-  const model = document.getElementById('modal-model-select').value;
+  const key = document.getElementById('modal-apikey-input')?.value.trim() || '';
+  const model = document.getElementById('modal-model-select')?.value || 'gpt-4o-mini';
   const msg = document.getElementById('apikey-status-msg');
 
   if (key) {
@@ -2003,8 +2119,10 @@ async function saveApiKeyConfig() {
     // Guardado en sesión local
   }
 
-  msg.style.color = 'var(--green-ok)';
-  msg.style.fontWeight = '700';
-  msg.textContent = '✅ Configuración actualizada.';
+  if (msg) {
+    msg.style.color = 'var(--green-ok)';
+    msg.style.fontWeight = '700';
+    msg.textContent = '✅ Configuración actualizada.';
+  }
   setTimeout(() => closeApiKeyModal(), 900);
 }
